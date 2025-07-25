@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Graph Visualizations</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1.5rem;
+    }
+    #links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #links a {
+      font-size: 1.2rem;
+      text-decoration: none;
+      color: #0074D9;
+      padding: 0.5rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    #links a:hover {
+      background-color: #f0f0f0;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Select a Graph to View</h1>
+  <div id="links">Loading…</div>
+
+  <script>
+    fetch('manifest.json')
+      .then(res => res.json())
+      .then(files => {
+        const linksDiv = document.getElementById('links');
+        linksDiv.innerHTML = '';
+
+        files.forEach(entry => {
+          const a = document.createElement('a');
+          a.href = `graph.html?file=${encodeURIComponent(entry.file)}`;
+          a.textContent = entry.label || entry.file;
+          linksDiv.appendChild(a);
+        });
+      })
+      .catch(err => {
+        document.getElementById('links').textContent = 'Failed to load graph list.';
+        console.error(err);
+      });
+  </script>
+</body>
+</html>

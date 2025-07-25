@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Dessin Graph Viewer</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    #graph {
+      width: 100%;
+      height: 100vh;
+    }
+    .info-panel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      max-width: 500px;
+      z-index: 1000;
+    }
+    .node {
+      stroke: #888;
+      stroke-width: 2;
+      cursor: pointer;
+    }
+    .node.highlighted {
+      stroke: #ff6b6b;
+      stroke-width: 4;
+    }
+    .edge {
+      stroke-width: 2;
+      fill: none;
+      stroke: #666;
+    }
+    .edge.highlighted {
+      stroke-width: 4;
+      stroke: #ff6b6b;
+    }
+    .node-label {
+      font-size: 10px;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+    .lmfdb-link {
+      color: #0074D9;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .lmfdb-link:hover {
+      text-decoration: underline;
+    }
+    .vertex-info {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .permutation-triple {
+      margin-top: 10px;
+      font-size: 11px;
+      line-height: 1.3;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="info-panel">
+    <div id="lmfdb-link-container"></div>
+    <div id="info">
+      <p>Drag to move vertices, scroll to zoom</p>
+      <p>Click or hover over vertices for details</p>
+    </div>
+    <div id="permutation-triple" class="permutation-triple"></div>
+    <div id="vertex-info" class="vertex-info"></div>
+  </div>
+  <div id="graph"></div>
+
+  <script>
+    function getQueryParam(param) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(param);
+    }
+  
+    const file = getQueryParam("file");
+  
+    if (!file) {
+      document.body.innerHTML = "<p style='padding:2rem;'>No file specified.</p>";
+    } else {
+      // Extract label from filename
+      const filename = file.split('/').pop();
+      const labelMatch = filename.match(/^([^-]+-[^-]+_[^-]+_[^-]+-[^-]+)_\d+\.json$/);
+      let label = "Dessin Graph";
+      let lmfdbUrl = "";
+      
+      if (labelMatch) {
+        label = labelMatch[1];
+        // Convert label format for LMFDB URL
+        // e.g., 9T34-6.3_5.2.1.1_3.3.1.1.1-a -> 9T34/6.3/5.2.1.1/3.3.1.1.1/a
+        const parts = label.split('-');
+        if (parts.length >= 2) {
+          const group = parts[0];
+          const rest = parts[1].split('_');
+          if (rest.length >= 3) {
+            const order1 = rest[0];
+            const order2 = rest[1];
+            const order3 = rest[2];
+            const orbit = rest[3] || 'a';
+            lmfdbUrl = `https://beta.lmfdb.org/Belyi/${group}/${order1}/${order2}/${order3}/${orbit}/`;
+          }
+        }
+      }
+    
+      fetch(file)
+        .then(res => res.json())
+        .then(data => {
+          // Set up LMFDB link as the title
+          if (lmfdbUrl) {
+            document.getElementById('lmfdb-link-container').innerHTML = 
+              `<h4><a href="${lmfdbUrl}" target="_blank" class="lmfdb-link">${label}</a></h4>`;
+          } else {
+            document.getElementById('lmfdb-link-container').innerHTML = `<h4>${label}</h4>`;
+          }
+          
+          // Display permutation triple
+          if (data.permutation_triple) {
+            document.getElementById('permutation-triple').innerHTML = 
+              `<strong>Permutation triple:</strong><br>${data.permutation_triple.join('<br>')}`;
+          }
+          
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          
+          // Create SVG with zoom support
+          const svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+          
+          // Create zoom behavior
+          const zoom = d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on("zoom", (event) => {
+              container.attr("transform", event.transform);
+            });
+          
+          svg.call(zoom);
+          
+          // Create container for all elements
+          const container = svg.append("g");
+          
+          // Process nodes
+          const nodes = data.nodes.map(d => ({
+            ...d.data,
+            color: d.data.id.startsWith('white_') ? '#ffffff' : '#000000',
+            textColor: d.data.id.startsWith('white_') ? '#000000' : '#ffffff',
+            embedding: d.data.embedding
+          }));
+          
+          // Process edges - group by source-target pairs and preserve embedding order
+          const edgeGroups = {};
+          
+          data.edges.forEach((edge, index) => {
+            const source = edge.data.source;
+            const target = edge.data.target;
+            const label = edge.data.label;
+            const key = `${source}-${target}`;
+            
+            if (!edgeGroups[key]) {
+              edgeGroups[key] = [];
+            }
+            edgeGroups[key].push({ source, target, label, index });
+          });
+          
+          // Create edges with curved paths for multiple edges, respecting embedding order
+          const edges = [];
+          Object.keys(edgeGroups).forEach(key => {
+            const group = edgeGroups[key];
+            if (group.length === 1) {
+              edges.push({
+                source: group[0].source,
+                target: group[0].target,
+                label: group[0].label,
+                curve: 0
+              });
+            } else {
+              // Multiple edges - create curved paths
+              group.forEach((edge, i) => {
+                const curve = (i - (group.length - 1) / 2) * 0.3;
+                edges.push({
+                  source: edge.source,
+                  target: edge.target,
+                  label: edge.label,
+                  curve: curve
+                });
+              });
+            }
+          });
+          
+          // Sort edges according to embedding order for each vertex
+          function sortEdgesByEmbedding(edges, nodes) {
+            const sortedEdges = [];
+            const processedEdges = new Set();
+            
+            // For each node, add its edges in embedding order
+            nodes.forEach(node => {
+              if (node.embedding && node.embedding.edge_order) {
+                const edgeOrder = node.embedding.edge_order;
+                
+                // Find edges incident to this node
+                const incidentEdges = edges.filter(edge => 
+                  edge.source === node.id || edge.target === node.id
+                );
+                
+                // Sort incident edges according to edge_order
+                const sortedIncidentEdges = [];
+                edgeOrder.forEach(label => {
+                  const matchingEdges = incidentEdges.filter(edge => edge.label === label);
+                  matchingEdges.forEach(edge => {
+                    if (!processedEdges.has(`${edge.source}-${edge.target}-${edge.label}`)) {
+                      sortedIncidentEdges.push(edge);
+                      processedEdges.add(`${edge.source}-${edge.target}-${edge.label}`);
+                    }
+                  });
+                });
+                
+                sortedEdges.push(...sortedIncidentEdges);
+              }
+            });
+            
+            // Add any remaining edges
+            edges.forEach(edge => {
+              const edgeKey = `${edge.source}-${edge.target}-${edge.label}`;
+              if (!processedEdges.has(edgeKey)) {
+                sortedEdges.push(edge);
+                processedEdges.add(edgeKey);
+              }
+            });
+            
+            return sortedEdges;
+          }
+          
+          // Sort edges by embedding order
+          const sortedEdges = sortEdgesByEmbedding(edges, nodes);
+          
+          // Link edges to actual node objects (required for D3)
+          sortedEdges.forEach(edge => {
+            edge.source = nodes.find(n => n.id === edge.source);
+            edge.target = nodes.find(n => n.id === edge.target);
+          });
+          
+          // Dessin layout algorithm
+          function layoutDessin(nodes, edges) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Find the main vertex (usually the one with the most edges)
+            const nodeDegrees = {};
+            edges.forEach(edge => {
+              nodeDegrees[edge.source] = (nodeDegrees[edge.source] || 0) + 1;
+              nodeDegrees[edge.target] = (nodeDegrees[edge.target] || 0) + 1;
+            });
+            
+            const mainVertex = nodes.reduce((max, node) => 
+              (nodeDegrees[node.id] || 0) > (nodeDegrees[max.id] || 0) ? node : max
+            );
+            
+            // Position the main vertex at the center
+            mainVertex.x = centerX;
+            mainVertex.y = centerY;
+            
+            // Position other vertices in a circle around the main vertex
+            const otherNodes = nodes.filter(n => n.id !== mainVertex.id);
+            const radius = 200;
+            const angleStep = (2 * Math.PI) / otherNodes.length;
+            
+            otherNodes.forEach((node, i) => {
+              const angle = i * angleStep;
+              node.x = centerX + radius * Math.cos(angle);
+              node.y = centerY + radius * Math.sin(angle);
+            });
+            
+            // Apply embedding constraints by adjusting positions
+            nodes.forEach(node => {
+              if (node.embedding && node.embedding.edge_order) {
+                const edgeOrder = node.embedding.edge_order;
+                const incidentEdges = edges.filter(edge => 
+                  edge.source === node.id || edge.target === node.id
+                );
+                
+                // Sort incident edges by their position in the cycle
+                const labelToPosition = {};
+                edgeOrder.forEach((label, index) => {
+                  labelToPosition[label] = index;
+                });
+                
+                incidentEdges.sort((a, b) => {
+                  const posA = labelToPosition[a.label] || 0;
+                  const posB = labelToPosition[b.label] || 0;
+                  return posA - posB;
+                });
+                
+                // Adjust positions of connected vertices to respect embedding
+                const angleStep = (2 * Math.PI) / incidentEdges.length;
+                incidentEdges.forEach((edge, i) => {
+                  const angle = i * angleStep;
+                  const otherNode = edge.source === node.id ? 
+                    nodes.find(n => n.id === edge.target) : 
+                    nodes.find(n => n.id === edge.source);
+                  
+                  if (otherNode) {
+                    const targetX = node.x + 150 * Math.cos(angle);
+                    const targetY = node.y + 150 * Math.sin(angle);
+                    
+                    // Move the other node towards the target position
+                    otherNode.x = targetX;
+                    otherNode.y = targetY;
+                  }
+                });
+              }
+            });
+          }
+          
+          // Apply the dessin layout from backend if available, otherwise use the frontend algorithm
+          if (data.layout && Object.keys(data.layout).length > 0) {
+            // Use the backend layout
+            nodes.forEach(node => {
+              if (data.layout[node.id]) {
+                node.x = data.layout[node.id].x + width / 2;
+                node.y = data.layout[node.id].y + height / 2;
+              }
+            });
+          } else {
+            // Fallback to frontend layout algorithm
+            layoutDessin(nodes, sortedEdges);
+          }
+          
+          // Create curved path generator
+          const line = d3.line()
+            .x(d => d.x)
+            .y(d => d.y)
+            .curve(d3.curveBasis);
+          
+          // Create links with curved paths
+          const link = container.append("g")
+            .selectAll("path")
+            .data(sortedEdges)
+            .enter().append("path")
+            .attr("class", "edge")
+            .style("stroke-width", 2);
+          
+          // Create edge labels
+          const edgeLabels = container.append("g")
+            .selectAll("text")
+            .data(sortedEdges)
+            .enter().append("text")
+            .attr("class", "edge-label")
+            .text(d => d.label)
+            .style("font-size", "10px")
+            .style("fill", "#333");
+          
+          // Create nodes with drag behavior
+          const node = container.append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 25)
+            .style("fill", d => d.color)
+            .style("stroke", "#888")
+            .style("stroke-width", 2)
+            .call(d3.drag()
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
+          
+          // Create node labels
+          const nodeLabels = container.append("g")
+            .selectAll("text")
+            .data(nodes)
+            .enter().append("text")
+            .attr("class", "node-label")
+            .text(d => {
+              if (d.cycle) {
+                return `(${d.cycle.join(',')})`;
+              }
+              return d.id;
+            })
+            .style("font-size", "10px")
+            .style("text-anchor", "middle")
+            .style("fill", d => d.textColor)
+            .style("pointer-events", "none");
+          
+          // Drag functions
+          function dragstarted(event, d) {
+            d.fx = d.x;
+            d.fy = d.y;
+          }
+          
+          function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+            updatePositions();
+          }
+          
+          function dragended(event, d) {
+            d.fx = null;
+            d.fy = null;
+          }
+          
+          // Function to update all positions
+          function updatePositions() {
+            // Update node positions
+            node.attr("cx", d => d.x).attr("cy", d => d.y);
+            nodeLabels.attr("x", d => d.x).attr("y", d => d.y + 4);
+            
+            // Update link positions with curved paths
+            link.attr("d", d => {
+              const dx = d.target.x - d.source.x;
+              const dy = d.target.y - d.source.y;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              const unitX = dx / length;
+              const unitY = dy / length;
+              
+              // Create control points for curved path
+              const midX = (d.source.x + d.target.x) / 2;
+              const midY = (d.source.y + d.target.y) / 2;
+              const offsetX = unitY * d.curve * length;
+              const offsetY = -unitX * d.curve * length;
+              
+              return line([
+                { x: d.source.x, y: d.source.y },
+                { x: midX + offsetX, y: midY + offsetY },
+                { x: d.target.x, y: d.target.y }
+              ]);
+            });
+            
+            // Update edge label positions
+            edgeLabels.attr("x", d => {
+              const dx = d.target.x - d.source.x;
+              const dy = d.target.y - d.source.y;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              const unitX = dx / length;
+              const unitY = dy / length;
+              const midX = (d.source.x + d.target.x) / 2;
+              const midY = (d.source.y + d.target.y) / 2;
+              const offsetX = unitY * d.curve * length;
+              const offsetY = -unitX * d.curve * length;
+              return midX + offsetX;
+            })
+            .attr("y", d => {
+              const dx = d.target.x - d.source.x;
+              const dy = d.target.y - d.source.y;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              const unitX = dx / length;
+              const unitY = dy / length;
+              const midX = (d.source.x + d.target.x) / 2;
+              const midY = (d.source.y + d.target.y) / 2;
+              const offsetX = unitY * d.curve * length;
+              const offsetY = -unitX * d.curve * length;
+              return midY + offsetY;
+            });
+          }
+          
+          // Initial position update
+          updatePositions();
+          
+          // Function to show vertex details
+          function showVertexInfo(d) {
+            const type = d.bipartite === 0 ? 'White' : 'Black';
+            let info = `<strong>${type} vertex</strong><br>`;
+            info += `<strong>Cycle:</strong> (${d.cycle ? d.cycle.join(',') : 'N/A'})<br>`;
+            
+            if (d.embedding && d.embedding.edge_order) {
+              info += `<strong>Edge order:</strong> (${d.embedding.edge_order.join(',')})<br>`;
+              info += `<em>Edges should be arranged counterclockwise in this order</em>`;
+            }
+            
+            document.getElementById('vertex-info').innerHTML = info;
+          }
+          
+          // Add hover and click interactions
+          node.on("mouseover", function(event, d) {
+            showVertexInfo(d);
+          });
+          
+          node.on("click", function(event, d) {
+            // Remove previous highlighting
+            node.classed("highlighted", false);
+            link.classed("highlighted", false);
+            
+            // Highlight clicked node and its neighbors
+            const connectedEdges = sortedEdges.filter(e => e.source === d.id || e.target === d.id);
+            const neighborIds = new Set();
+            
+            connectedEdges.forEach(edge => {
+              if (edge.source !== d.id) neighborIds.add(edge.source);
+              if (edge.target !== d.id) neighborIds.add(edge.target);
+            });
+            
+            // Highlight the clicked node and its neighbors
+            node.filter(n => n.id === d.id || neighborIds.has(n.id))
+                .classed("highlighted", true);
+            
+            // Highlight connected edges
+            link.filter(l => l.source === d.id || l.target === d.id)
+                .classed("highlighted", true);
+                
+            // Show detailed info
+            showVertexInfo(d);
+          });
+          
+          // Click on background to clear highlighting
+          svg.on("click", function(event) {
+            if (event.target === svg.node()) {
+              node.classed("highlighted", false);
+              link.classed("highlighted", false);
+              document.getElementById('vertex-info').innerHTML = '';
+            }
+          });
+        })
+        .catch(err => {
+          document.body.innerHTML = `<p style='padding:2rem;color:red;'>Error loading file: ${file}</p>`;
+          console.error(err);
+        });
+    }
+  </script>
+</body>
+</html>
