@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .control-point {
+            cursor: move;
+            fill: #007bff;
+            stroke: #0056b3;
+            stroke-width: 2;
+        }
+        .control-point:hover { fill: #0056b3; }
+        .control-label {
+            font-size: 12px;
+            fill: #007bff;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .edge { stroke: black; stroke-width: 3; fill: none; }
+        .vertex { cursor: default; }
+        .vertex-text {
+            font-size: 16px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Interactive Bezier Curve Test</h2>
+        <p>Drag the blue control points to modify the curve between vertices A and B.</p>
+        <div id="graph"></div>
+    </div>
+
+    <script>
+        // Set up the SVG
+        const width = 600;
+        const height = 400;
+        const margin = 50;
+
+        const svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("border", "1px solid #ccc")
+            .style("background", "white");
+
+        // Define the vertices and control points
+        const data = {
+            vertices: [
+                { id: "A", x: margin, y: height/2, color: "white", textColor: "black" },
+                { id: "B", x: width - margin, y: height/2, color: "black", textColor: "white" }
+            ],
+            controlPoints: [
+                { id: "P1", x: width/3, y: height/3, label: "P1" },
+                { id: "P2", x: 2*width/3, y: 2*height/3, label: "P2" }
+            ]
+        };
+
+        // Draw vertices
+        const vertices = svg.selectAll(".vertex")
+            .data(data.vertices)
+            .enter()
+            .append("circle")
+            .attr("class", "vertex")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 20)
+            .attr("fill", d => d.color)
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        // Add vertex labels
+        svg.selectAll(".vertex-text")
+            .data(data.vertices)
+            .enter()
+            .append("text")
+            .attr("class", "vertex-text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("fill", d => d.textColor)
+            .text(d => d.id);
+
+        // Draw control points
+        const controlPoints = svg.selectAll(".control-point")
+            .data(data.controlPoints)
+            .enter()
+            .append("circle")
+            .attr("class", "control-point")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 8);
+
+        // Add control point labels
+        svg.selectAll(".control-label")
+            .data(data.controlPoints)
+            .enter()
+            .append("text")
+            .attr("class", "control-label")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y - 15)
+            .text(d => d.label);
+
+        // Create the curve path
+        const curve = svg.append("path")
+            .attr("class", "edge")
+            .attr("d", generateCurvePath());
+
+        // Function to generate the curve path
+        function generateCurvePath() {
+            const startX = data.vertices[0].x + 20; // Start from right edge of vertex A
+            const startY = data.vertices[0].y;
+            const endX = data.vertices[1].x - 20;   // End at left edge of vertex B
+            const endY = data.vertices[1].y;
+            
+            return `M ${startX} ${startY} C ${data.controlPoints[0].x} ${data.controlPoints[0].y} ${data.controlPoints[1].x} ${data.controlPoints[1].y} ${endX} ${endY}`;
+        }
+
+        // Update curve when control points move
+        function updateCurve() {
+            curve.attr("d", generateCurvePath());
+        }
+
+        // Drag behavior for control points
+        const drag = d3.drag()
+            .on("drag", function(event, d) {
+                // Update control point position
+                d.x = event.x;
+                d.y = event.y;
+                
+                // Update visual position
+                d3.select(this)
+                    .attr("cx", d.x)
+                    .attr("cy", d.y);
+                
+                // Update label position
+                svg.selectAll(".control-label")
+                    .filter(label => label.id === d.id)
+                    .attr("x", d.x)
+                    .attr("y", d.y - 15);
+                
+                // Update the curve
+                updateCurve();
+            });
+
+        // Apply drag behavior to control points
+        controlPoints.call(drag);
+
+        // Initial curve update
+        updateCurve();
+    </script>
+</body>
+</html> 
