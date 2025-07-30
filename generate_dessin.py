@@ -36,7 +36,7 @@ LMFDB_DATA = {
             "label": "7T6-4.2.1_3.2.2_3.2.2-a",
             "plabel": "7T6-4.2.1_3.2.2_3.2.2",
             "deg": 7,
-            "triples_cyc": [["(1,6,5,3)", "(4,7)", "(1,2,3)", "(4,5)", "(6,7)"]],
+            "triples_cyc": [["(1,6,5,3)(4,7)", "(1,2,3)(4,5)(6,7)"]],
             "group": "7T6",
             "g": 0,
             "geomtype": "S"
@@ -45,7 +45,7 @@ LMFDB_DATA = {
             "label": "7T6-4.2.1_3.2.2_3.2.2-b", 
             "plabel": "7T6-4.2.1_3.2.2_3.2.2",
             "deg": 7,
-            "triples_cyc": [["(1,2,3,4)", "(5,6,7)", "(1,5)", "(2,6)", "(3,7)", "(4)"]],
+            "triples_cyc": [["(1,2,3,4)(5,6,7)", "(1,5)(2,6)(3,7)(4)"]],
             "group": "7T6",
             "g": 0,
             "geomtype": "S"
@@ -262,22 +262,104 @@ def generate_single_diagram(white_perm, black_perm, output_path):
             P2 = (P3s[0] + d * Uin[0], P3s[1] + d * Uin[1])
             curves.append((P0s, P1, P2, P3s, lab))
 
-    # Ensure all vertices are placed before drawing edges
-    for v in vertices.keys():
-        if v not in pos:
-            # Place unplaced vertices at default positions
-            if v.startswith("w"):
-                pos[v] = (0, 0)
-                orient[v] = 0.0
-            else:
-                pos[v] = (1.4, 0)
-                orient[v] = 0.0
+    # Use the original edge traversal logic from everett.py
+    logger.info("=== Starting edge drawing process ===")
+    logger.info(f"Total labels to process: {len(labels)}")
     
-    # Draw all edges (simplified traversal)
-    for v in list(vertices.keys()):
-        for idx, lab in enumerate(vertices[v]["cycle"]):
-            if lab not in visited:
-                draw_edge(v, idx)
+    # Start with the first edge and continue face traversal
+    current_vertex = "w1"
+    current_port = 0
+    
+    iteration = 1
+    while len(visited) < len(labels):
+        logger.info(f"=== Iteration {iteration} ===")
+        logger.info(f"Current visited labels: {len(visited)}/{len(labels)}")
+        logger.info(f"Placed vertices: {list(pos.keys())}")
+        
+        # If this is the first iteration, start with the first edge
+        if iteration == 1:
+            start_vertex = current_vertex
+            start_port = current_port
+            logger.info(f"Starting first face traversal from vertex {start_vertex}, port {start_port}")
+        else:
+            # Find a vertex with unvisited edges to start a new face
+            start_vertex = None
+            start_port = None
+            for v in list(pos.keys()):
+                for idx, lab in enumerate(vertices[v]["cycle"]):
+                    if lab not in visited:
+                        start_vertex = v
+                        start_port = idx
+                        logger.info(f"Starting new face traversal from vertex {v}, port {idx} (label {lab})")
+                        break
+                if start_vertex:
+                    break
+        
+        if not start_vertex:
+            logger.warning("No unvisited edges found!")
+            break
+        
+        # Traverse the face starting from this vertex/port
+        current_vertex = start_vertex
+        current_port = start_port
+        
+        # Keep track of the path we've taken for backtracking
+        path = []
+        
+        while True:
+            logger.info(f"Face traversal: drawing edge from {current_vertex}, port {current_port}")
+            draw_edge(current_vertex, current_port)
+            
+            # Record this step in our path
+            path.append((current_vertex, current_port))
+            
+            # Find the next vertex and port by following the edge
+            lab = vertices[current_vertex]["cycle"][current_port]
+            next_vertex = edges[lab]["black"] if current_vertex.startswith("w") else edges[lab]["white"]
+            next_port = port_index[next_vertex][lab]
+            
+            logger.info(f"Face traversal: following edge to {next_vertex}, port {next_port}")
+            
+            # Check if the next vertex has unvisited edges by moving counterclockwise
+            found_unvisited = False
+            for off in range(vertices[next_vertex]["deg"]):
+                p = (next_port + off) % vertices[next_vertex]["deg"]
+                if vertices[next_vertex]["cycle"][p] not in visited:
+                    current_vertex = next_vertex
+                    current_port = p
+                    found_unvisited = True
+                    logger.info(f"Found unvisited edge at vertex {next_vertex}, port {p}")
+                    break
+            
+            if not found_unvisited:
+                # No unvisited edges at next vertex, backtrack to the vertex we came from
+                if len(path) > 0:
+                    # Go back to the vertex we just came from and continue counterclockwise
+                    prev_vertex, prev_port = path[-1]  # Get the vertex we just came from
+                    current_vertex = prev_vertex
+                    current_port = (prev_port + 1) % vertices[prev_vertex]["deg"]
+                    logger.info(f"Backtracking to {current_vertex}, port {current_port}")
+                    
+                    # Check if this port has an unvisited edge
+                    lab = vertices[current_vertex]["cycle"][current_port]
+                    if lab not in visited:
+                        logger.info(f"Found unvisited edge after backtracking")
+                        continue
+                    else:
+                        logger.info(f"Face traversal complete after backtracking")
+                        break
+                else:
+                    logger.info(f"Face traversal complete - no more backtracking possible")
+                    break
+        
+        iteration += 1
+    
+    logger.info("=== Edge drawing complete ===")
+    logger.info(f"Final visited labels: {len(visited)}/{len(labels)}")
+    logger.info(f"Total vertices placed: {len(pos)}")
+    logger.info(f"Total stubs: {len(stubs)}")
+    logger.info(f"Total straight edges: {len(straight)}")
+    logger.info(f"Total curved edges: {len(curves)}")
 
     # Generate HTML
     html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm)
@@ -295,18 +377,60 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
         col = "black" if face == "white" else "white"
         vertices_data.append(f'                {{ id: "{v}", x: {x}, y: {y}, color: "{face}", textColor: "{col}" }}')
     
-    # Build edges data (simplified)
+    # Build straight edges data - map stub coordinates to vertex coordinates
     straight_edges_data = []
     for p1, p2, lab in straight:
-        mx, my = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
-        straight_edges_data.append(f'                {{ start: [{p1[0]}, {p1[1]}], end: [{p2[0]}, {p2[1]}], label: "{lab}", labelX: {mx}, labelY: {my} }}')
+        # Find which vertices this edge connects by looking at the edge mappings
+        # We need to map p1 (stub position) to the actual vertex position
+        # For now, let's find the closest vertex to p1 and use that as the start
+        start_vertex = None
+        min_dist = float('inf')
+        for v, (vx, vy) in pos.items():
+            dist = math.sqrt((p1[0] - vx)**2 + (p1[1] - vy)**2)
+            if dist < min_dist:
+                min_dist = dist
+                start_vertex = (vx, vy)
+        
+        # p2 is already the target vertex position
+        mx, my = (start_vertex[0] + p2[0]) / 2, (start_vertex[1] + p2[1]) / 2
+        straight_edges_data.append(f'                {{ start: [{start_vertex[0]}, {start_vertex[1]}], end: [{p2[0]}, {p2[1]}], label: "{lab}", labelX: {mx}, labelY: {my} }}')
     
+    # Build curved edges data - map stub coordinates to vertex coordinates
     curved_edges_data = []
     for i, (P0s, P1, P2, P3s, lab) in enumerate(curves):
-        mx, my = (P0s[0] + P3s[0]) / 2, (P0s[1] + P3s[1]) / 2
-        curved_edges_data.append(f'                {{ id: {i}, start: [{P0s[0]}, {P0s[1]}], end: [{P3s[0]}, {P3s[1]}], control1: [{P1[0]}, {P1[1]}], control2: [{P2[0]}, {P2[1]}], label: "{lab}", labelX: {mx}, labelY: {my} }}')
+        # Find the closest vertices to P0s and P3s (the stub endpoints)
+        start_vertex = None
+        end_vertex = None
+        min_dist_start = float('inf')
+        min_dist_end = float('inf')
+        
+        for v, (vx, vy) in pos.items():
+            # Check start stub
+            dist_start = math.sqrt((P0s[0] - vx)**2 + (P0s[1] - vy)**2)
+            if dist_start < min_dist_start:
+                min_dist_start = dist_start
+                start_vertex = (vx, vy)
+            
+            # Check end stub
+            dist_end = math.sqrt((P3s[0] - vx)**2 + (P3s[1] - vy)**2)
+            if dist_end < min_dist_end:
+                min_dist_end = dist_end
+                end_vertex = (vx, vy)
+        
+        # Calculate a point on the curve at t=0.5 (middle of the curve) using cubic Bezier formula
+        t = 0.5
+        mx = (1-t)**3 * start_vertex[0] + 3*(1-t)**2*t * P1[0] + 3*(1-t)*t**2 * P2[0] + t**3 * end_vertex[0]
+        my = (1-t)**3 * start_vertex[1] + 3*(1-t)**2*t * P1[1] + 3*(1-t)*t**2 * P2[1] + t**3 * end_vertex[1]
+        
+        curved_edges_data.append(f'                {{ id: {i}, start: [{start_vertex[0]}, {start_vertex[1]}], end: [{end_vertex[0]}, {end_vertex[1]}], control1: [{P1[0]}, {P1[1]}], control2: [{P2[0]}, {P2[1]}], label: "{lab}", labelX: {mx}, labelY: {my} }}')
     
-    # Basic HTML template
+    # Build the control points data
+    control_points_data = []
+    for i, (P0s, P1, P2, P3s, lab) in enumerate(curves):
+        control_points_data.append(f'                {{ id: "P1_{lab}", x: {P1[0]}, y: {P1[1]}, label: "P1_{lab}", edgeId: {i}, control: 1 }}')
+        control_points_data.append(f'                {{ id: "P2_{lab}", x: {P2[0]}, y: {P2[1]}, label: "P2_{lab}", edgeId: {i}, control: 2 }}')
+
+    # Enhanced HTML template with all interactive features
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -314,7 +438,20 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {{ margin: 0; padding: 20px; font-family: Arial, sans-serif; }}
-        .container {{ max-width: 1200px; margin: 0 auto; }}
+        .container {{ max-width: 1200px; margin: 0 auto; position: relative; }}
+        .control-point {{
+            cursor: move;
+            fill: #007bff;
+            stroke: #0056b3;
+            stroke-width: 1;
+        }}
+        .control-point:hover {{ fill: #0056b3; }}
+        .control-label {{
+            font-size: 10px;
+            fill: #007bff;
+            font-weight: bold;
+            pointer-events: none;
+        }}
         .edge {{ stroke: black; stroke-width: 1; fill: none; }}
         .vertex {{ cursor: default; }}
         .vertex-text {{
@@ -338,40 +475,80 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             rx: 3;
             ry: 3;
         }}
+        .toggle-button {{
+            padding: 8px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1000;
+            width: 140px;
+            white-space: nowrap;
+        }}
+        .toggle-button:hover {{
+            background: #218838;
+        }}
+        .button-container {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Everett Diagram</h1>
-        <p><strong>White permutation:</strong> {white_perm}</p>
-        <p><strong>Black permutation:</strong> {black_perm}</p>
+        <div class="button-container">
+            <button class="toggle-button" onclick="toggleControlPoints()">Hide Control Points</button>
+            <button class="toggle-button" onclick="toggleVertexLabels()">Hide Vertex Labels</button>
+            <button class="toggle-button" onclick="toggleEdgeLabels()">Hide Edge Labels</button>
+        </div>
         <div id="graph"></div>
     </div>
 
     <script>
-        const width = 800;
-        const height = 600;
+        // Set up the SVG - make it responsive to viewport with padding
+        const width = Math.max(window.innerWidth - 300, 800);
+        const height = Math.max(window.innerHeight - 120, 600);
         const margin = 50;
 
         const svg = d3.select("#graph")
             .append("svg")
             .attr("width", width)
             .attr("height", height)
-            .style("border", "1px solid #ccc");
+            .style("border", "1px solid #ccc")
+            .style("background", "white");
 
+        // Add zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 10])
+            .on("zoom", function(event) {{
+                graphGroup.attr("transform", event.transform);
+            }});
+
+        svg.call(zoom);
+        
+        // Create a group for all graph elements
+        const graphGroup = svg.append("g");
+
+        // Define the graph data
         const graphData = {{
             vertices: [
 {",".join(vertices_data)},
             ],
             straightEdges: [
-{",".join(straight_edges_data)},
+{",".join(straight_edges_data) if straight_edges_data else ""},
             ],
             curvedEdges: [
-{",".join(curved_edges_data)},
+{",".join(curved_edges_data) if curved_edges_data else ""},
             ]
         }};
 
-        // Calculate bounds and scales
+        // Calculate the bounds of the graph data
         const allX = [...graphData.vertices.map(v => v.x), ...graphData.straightEdges.flatMap(e => [e.start[0], e.end[0]]), ...graphData.curvedEdges.flatMap(e => [e.start[0], e.end[0], e.control1[0], e.control2[0]])];
         const allY = [...graphData.vertices.map(v => v.y), ...graphData.straightEdges.flatMap(e => [e.start[1], e.end[1]]), ...graphData.curvedEdges.flatMap(e => [e.start[1], e.end[1], e.control1[1], e.control2[1]])];
         
@@ -380,17 +557,27 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
         const minY = Math.min(...allY);
         const maxY = Math.max(...allY);
         
+        // Add some padding around the bounds
         const padding = Math.max(maxX - minX, maxY - minY) * 0.1;
+        const xDomain = [minX - padding, maxX + padding];
+        const yDomain = [minY - padding, maxY + padding];
+        
+        // Scale to fit the graph data
         const xScale = d3.scaleLinear()
-            .domain([minX - padding, maxX + padding])
+            .domain(xDomain)
             .range([margin, width - margin]);
 
         const yScale = d3.scaleLinear()
-            .domain([minY - padding, maxY + padding])
+            .domain(yDomain)
             .range([height - margin, margin]);
 
-        // Draw edges
-        svg.selectAll(".straight-edge")
+        // Create control points data
+        const controlPoints = [
+{",".join(control_points_data) if control_points_data else ""},
+        ];
+
+        // Draw straight edges (first, so they go under vertices)
+        graphGroup.selectAll(".straight-edge")
             .data(graphData.straightEdges)
             .enter()
             .append("line")
@@ -400,15 +587,16 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             .attr("x2", d => xScale(d.end[0]))
             .attr("y2", d => yScale(d.end[1]));
 
-        svg.selectAll(".curved-edge")
+        // Draw curved edges (first, so they go under vertices)
+        const curvedEdges = graphGroup.selectAll(".curved-edge")
             .data(graphData.curvedEdges)
             .enter()
             .append("path")
             .attr("class", "curved-edge edge")
             .attr("d", d => `M ${{xScale(d.start[0])}} ${{yScale(d.start[1])}} C ${{xScale(d.control1[0])}} ${{yScale(d.control1[1])}} ${{xScale(d.control2[0])}} ${{yScale(d.control2[1])}} ${{xScale(d.end[0])}} ${{yScale(d.end[1])}}`);
 
-        // Draw vertices
-        svg.selectAll(".vertex")
+        // Draw vertices (after edges, so they appear on top)
+        const vertices = graphGroup.selectAll(".vertex")
             .data(graphData.vertices)
             .enter()
             .append("circle")
@@ -420,8 +608,8 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             .attr("stroke", "black")
             .attr("stroke-width", 2);
 
-        // Add labels
-        svg.selectAll(".vertex-text")
+        // Add vertex labels
+        graphGroup.selectAll(".vertex-text")
             .data(graphData.vertices)
             .enter()
             .append("text")
@@ -431,25 +619,190 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             .attr("fill", d => d.textColor)
             .text(d => d.id);
 
-        // Add edge labels
-        const edgeLabels = svg.selectAll(".edge-label")
-            .data([...graphData.straightEdges, ...graphData.curvedEdges])
+        // Add straight edge labels with background rectangles
+        const straightEdgeLabels = graphGroup.selectAll(".straight-edge-label")
+            .data(graphData.straightEdges)
             .enter()
             .append("g")
             .attr("class", "edge-label-group");
 
-        edgeLabels.append("rect")
+        straightEdgeLabels.append("rect")
             .attr("class", "edge-label-bg")
             .attr("x", d => xScale(d.labelX) - 8)
             .attr("y", d => yScale(d.labelY) - 8)
             .attr("width", 16)
             .attr("height", 16);
 
-        edgeLabels.append("text")
+        straightEdgeLabels.append("text")
             .attr("class", "edge-label")
             .attr("x", d => xScale(d.labelX))
             .attr("y", d => yScale(d.labelY))
             .text(d => d.label);
+
+        // Add curved edge labels with background rectangles
+        const curvedEdgeLabels = graphGroup.selectAll(".curved-edge-label")
+            .data(graphData.curvedEdges)
+            .enter()
+            .append("g")
+            .attr("class", "edge-label-group");
+
+        curvedEdgeLabels.append("rect")
+            .attr("class", "edge-label-bg")
+            .attr("x", d => xScale(d.labelX) - 8)
+            .attr("y", d => yScale(d.labelY) - 8)
+            .attr("width", 16)
+            .attr("height", 16);
+
+        curvedEdgeLabels.append("text")
+            .attr("class", "edge-label")
+            .attr("x", d => xScale(d.labelX))
+            .attr("y", d => yScale(d.labelY))
+            .text(d => d.label);
+
+        // Draw control points
+        const controlPointElements = graphGroup.selectAll(".control-point")
+            .data(controlPoints)
+            .enter()
+            .append("circle")
+            .attr("class", "control-point")
+            .attr("cx", d => xScale(d.x))
+            .attr("cy", d => yScale(d.y))
+            .attr("r", 6);
+
+        // Add control point labels
+        graphGroup.selectAll(".control-label")
+            .data(controlPoints)
+            .enter()
+            .append("text")
+            .attr("class", "control-label")
+            .attr("id", d => d.id)
+            .attr("x", d => xScale(d.x))
+            .attr("y", d => yScale(d.y) - 10)
+            .text(d => d.label);
+
+        // Function to update curved edge
+        function updateCurvedEdge(edgeId) {{
+            // Find the edge and its control points
+            const edge = graphData.curvedEdges.find(e => e.id === edgeId);
+            const cp1 = controlPoints.find(cp => cp.edgeId === edgeId && cp.control === 1);
+            const cp2 = controlPoints.find(cp => cp.edgeId === edgeId && cp.control === 2);
+
+            // Update the control points in the edge data
+            edge.control1 = [cp1.x, cp1.y];
+            edge.control2 = [cp2.x, cp2.y];
+
+            // Update the path for this edge
+            graphGroup.selectAll(".curved-edge")
+                .filter(d => d.id === edgeId)
+                .attr("d", d => `M ${{xScale(d.start[0])}} ${{yScale(d.start[1])}} C ${{xScale(edge.control1[0])}} ${{yScale(edge.control1[1])}} ${{xScale(edge.control2[0])}} ${{yScale(edge.control2[1])}} ${{xScale(d.end[0])}} ${{yScale(d.end[1])}}`);
+            
+            // Update the edge label position
+            // Calculate a point on the curve at t=0.5 (middle of the curve)
+            const t = 0.5;
+            const x = Math.pow(1-t, 3) * edge.start[0] + 
+                      3 * Math.pow(1-t, 2) * t * edge.control1[0] + 
+                      3 * (1-t) * Math.pow(t, 2) * edge.control2[0] + 
+                      Math.pow(t, 3) * edge.end[0];
+            const y = Math.pow(1-t, 3) * edge.start[1] + 
+                      3 * Math.pow(1-t, 2) * t * edge.control1[1] + 
+                      3 * (1-t) * Math.pow(t, 2) * edge.control2[1] + 
+                      Math.pow(t, 3) * edge.end[1];
+            
+            // Update the label position and background rectangle
+            graphGroup.selectAll(".edge-label-group")
+                .filter(d => d.id === edgeId)
+                .select("rect")
+                .attr("x", xScale(x) - 8)
+                .attr("y", yScale(y) - 8);
+
+            graphGroup.selectAll(".edge-label-group")
+                .filter(d => d.id === edgeId)
+                .select("text")
+                .attr("x", xScale(x))
+                .attr("y", yScale(y));
+        }}
+
+        // Drag behavior for control points
+        const drag = d3.drag()
+            .on("start", function(event, d) {{
+                // Store initial positions
+                d.startX = d.x;
+                d.startY = d.y;
+                d.startEventX = event.x;
+                d.startEventY = event.y;
+            }})
+            .on("drag", function(event, d) {{
+                // Calculate the change in event coordinates
+                const deltaX = event.x - d.startEventX;
+                const deltaY = event.y - d.startEventY;
+                
+                // Convert delta to data coordinates using the scale
+                const deltaDataX = xScale.invert(d.startEventX + deltaX) - xScale.invert(d.startEventX);
+                const deltaDataY = yScale.invert(d.startEventY + deltaY) - yScale.invert(d.startEventY);
+                
+                // Update control point data (no boundary constraints)
+                d.x = d.startX + deltaDataX;
+                d.y = d.startY + deltaDataY;
+                
+                // Update visual position using the scale
+                const newSvgX = xScale(d.x);
+                const newSvgY = yScale(d.y);
+                
+                d3.select(this)
+                    .attr("cx", newSvgX)
+                    .attr("cy", newSvgY);
+
+                // Update label position
+                graphGroup.selectAll(".control-label")
+                    .filter(label => label.id === d.id)
+                    .attr("x", newSvgX)
+                    .attr("y", newSvgY - 10);
+
+                // Update the curve
+                updateCurvedEdge(d.edgeId);
+            }});
+
+        // Apply drag behavior to control points
+        controlPointElements.call(drag);
+
+        // Toggle control points visibility
+        window.toggleControlPoints = function() {{
+            const button = document.querySelector('.toggle-button');
+            const controlPoints = document.querySelectorAll('.control-point, .control-label');
+            const isVisible = controlPoints[0].style.display !== 'none';
+            
+            controlPoints.forEach(point => {{
+                point.style.display = isVisible ? 'none' : 'block';
+            }});
+            
+            button.textContent = isVisible ? 'Show Control Points' : 'Hide Control Points';
+        }};
+
+        // Toggle vertex labels visibility
+        window.toggleVertexLabels = function() {{
+            const button = document.querySelectorAll('.toggle-button')[1];
+            const vertexLabels = document.querySelectorAll('.vertex-text');
+            const isVisible = vertexLabels[0].style.display !== 'none';
+            
+            vertexLabels.forEach(label => {{
+                label.style.display = isVisible ? 'none' : 'block';
+            }});
+            
+            button.textContent = isVisible ? 'Show Vertex Labels' : 'Hide Vertex Labels';
+        }};
+
+        // Toggle edge labels visibility
+        window.toggleEdgeLabels = function() {{
+            const button = document.querySelectorAll('.toggle-button')[2];
+            const edgeLabels = document.querySelectorAll('.edge-label-group');
+            const isVisible = edgeLabels[0].style.display !== 'none';
+            
+            edgeLabels.forEach(label => {{
+                label.style.display = isVisible ? 'none' : 'block';
+            }});
+            
+            button.textContent = isVisible ? 'Show Edge Labels' : 'Hide Edge Labels';
+        }};
     </script>
 </body>
 </html>"""
