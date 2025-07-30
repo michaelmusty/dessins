@@ -480,7 +480,7 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
 <body>
     <div class="container">
         <div class="nav">
-            <a href="../index.html">← Back to Passport Index</a>
+            <a href="../../passports/{passport_label}/index.html">← Back to Passport Index</a>
             <a href="../../index.html">← Back to Main Index</a>
         </div>
         
@@ -539,7 +539,7 @@ def generate_passport_page(passport_label):
         galmap_dir = generate_galmap_page(galmap)
         galmap_links.append({
             "label": galmap["label"],
-            "path": f"../galmaps/{galmap['label']}/index.html",
+            "path": f"../../galmaps/{galmap['label']}/index.html",
             "deg": galmap.get("deg", "N/A"),
             "g": galmap.get("g", "N/A")
         })
