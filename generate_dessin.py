@@ -142,7 +142,7 @@ def generate_galmap_page(galmap_data):
             diagram_path = galmap_dir / diagram_filename
             
             try:
-                generate_single_diagram(white_perm, black_perm, diagram_path)
+                generate_single_diagram(white_perm, black_perm, diagram_path, galmap_data["label"], galmap_data["plabel"])
                 diagram_files.append({
                     "filename": diagram_filename,
                     "white": white_perm,
@@ -161,7 +161,7 @@ def generate_galmap_page(galmap_data):
     return galmap_dir
 
 
-def generate_single_diagram(white_perm, black_perm, output_path):
+def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, passport_label):
     """Generate a single diagram from permutation strings"""
     # Parse permutations
     cw = parse_cycles(white_perm)
@@ -362,13 +362,13 @@ def generate_single_diagram(white_perm, black_perm, output_path):
     logger.info(f"Total curved edges: {len(curves)}")
 
     # Generate HTML
-    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm)
+    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, galmap_label, passport_label)
     
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
 
-def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm):
+def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, galmap_label, passport_label):
     """Generate the interactive HTML content (simplified version)"""
     # Build vertices data
     vertices_data = []
@@ -430,15 +430,29 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
         control_points_data.append(f'                {{ id: "P1_{lab}", x: {P1[0]}, y: {P1[1]}, label: "P1_{lab}", edgeId: {i}, control: 1 }}')
         control_points_data.append(f'                {{ id: "P2_{lab}", x: {P2[0]}, y: {P2[1]}, label: "P2_{lab}", edgeId: {i}, control: 2 }}')
 
-    # Enhanced HTML template with all interactive features
+    # Enhanced HTML template with minimal layout and navigation
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <title>Everett Diagram: {white_perm} vs {black_perm}</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body {{ margin: 0; padding: 20px; font-family: Arial, sans-serif; }}
-        .container {{ max-width: 1200px; margin: 0 auto; position: relative; }}
+        body {{ margin: 0; padding: 0; font-family: Arial, sans-serif; }}
+        .nav {{
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }}
+        .nav a {{
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 20px;
+        }}
+        .nav a:hover {{
+            text-decoration: underline;
+        }}
+        .container {{ width: 100%; height: calc(100vh - 50px); position: relative; }}
         .control-point {{
             cursor: move;
             fill: #007bff;
@@ -501,6 +515,11 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
     </style>
 </head>
 <body>
+    <div class="nav">
+        <a href="index.html">← Back to Galmap</a>
+        <a href="../../passports/{passport_label}/index.html">← Back to Passport</a>
+        <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a>
+    </div>
     <div class="container">
         <div class="button-container">
             <button class="toggle-button" onclick="toggleControlPoints()">Hide Control Points</button>
@@ -511,9 +530,9 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
     </div>
 
     <script>
-        // Set up the SVG - make it responsive to viewport with padding
-        const width = Math.max(window.innerWidth - 300, 800);
-        const height = Math.max(window.innerHeight - 120, 600);
+        // Set up the SVG - use full container size
+        const width = window.innerWidth;
+        const height = window.innerHeight - 50; // Account for nav bar
         const margin = 50;
 
         const svg = d3.select("#graph")
