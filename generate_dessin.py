@@ -480,8 +480,8 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
 <body>
     <div class="container">
         <div class="nav">
-            <a href="../../passports/{passport_label}/index.html">← Back to Passport Index</a>
-            <a href="../../index.html">← Back to Main Index</a>
+            <a href="/dessins/passports/{passport_label}/index.html">← Back to Passport Index</a>
+            <a href="/dessins/index.html">← Back to Main Index</a>
         </div>
         
         <h1>Galmap: {galmap_label}</h1>
@@ -539,7 +539,7 @@ def generate_passport_page(passport_label):
         galmap_dir = generate_galmap_page(galmap)
         galmap_links.append({
             "label": galmap["label"],
-            "path": f"../../galmaps/{galmap['label']}/index.html",
+            "path": f"/dessins/galmaps/{galmap['label']}/index.html",
             "deg": galmap.get("deg", "N/A"),
             "g": galmap.get("g", "N/A")
         })
@@ -564,7 +564,7 @@ def generate_passport_page(passport_label):
 <body>
     <div class="container">
         <div class="nav">
-            <a href="../index.html">← Back to Main Index</a>
+            <a href="/dessins/index.html">← Back to Main Index</a>
         </div>
         
         <h1>Passport: {passport_label}</h1>
@@ -638,7 +638,7 @@ def generate_main_index():
         passport_data = LMFDB_DATA["passports"][passport_label]
         html_content += f"""
             <div class="passport-item">
-                <h3><a href="passports/{passport_label}/index.html">{passport_label}</a></h3>
+                <h3><a href="/dessins/passports/{passport_label}/index.html">{passport_label}</a></h3>
                 <p><strong>Degree:</strong> {passport_data.get('deg', 'N/A')}</p>
                 <p><strong>Group:</strong> {passport_data.get('group', 'N/A')}</p>
                 <p><strong>Genus:</strong> {passport_data.get('g', 'N/A')}</p>
