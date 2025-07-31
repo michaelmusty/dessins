@@ -434,7 +434,7 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>Everett Diagram: {white_perm} vs {black_perm}</title>
+    <title>Dessin: {white_perm} vs {black_perm}</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {{ margin: 0; padding: 0; font-family: Arial, sans-serif; }}
@@ -859,25 +859,26 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
         <h1>Galmap: {galmap_label}</h1>
         
         <div class="metadata">
-            <h3>Metadata</h3>
+            <h3>Galmap Metadata</h3>
             <p><strong>Passport:</strong> {passport_label}</p>
             <p><strong>Degree:</strong> {galmap_data.get('deg', 'N/A')}</p>
             <p><strong>Group:</strong> {galmap_data.get('group', 'N/A')}</p>
             <p><strong>Genus:</strong> {galmap_data.get('g', 'N/A')}</p>
             <p><strong>Geometric Type:</strong> {galmap_data.get('geomtype', 'N/A')}</p>
+            <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a></p>
         </div>
         
-        <h2>Diagrams ({len(diagram_files)})</h2>
+        <h2>Dessins ({len(diagram_files)})</h2>
         <div class="diagram-grid">
 """
     
     for diagram in diagram_files:
         html_content += f"""
             <div class="diagram-item">
-                <h3>Diagram {diagram['index']}</h3>
+                <h3><a href="{diagram['filename']}">Dessin {diagram['index']}</a></h3>
                 <p><strong>White:</strong> {diagram['white']}</p>
                 <p><strong>Black:</strong> {diagram['black']}</p>
-                <iframe src="{diagram['filename']}"></iframe>
+                <p><strong>Permutation Triple:</strong> σ₀ = {diagram['white']}, σ₁ = {diagram['black']}</p>
             </div>
 """
     
@@ -949,6 +950,7 @@ def generate_passport_page(passport_label):
             <p><strong>Geometric Type:</strong> {passport_data.get('geomtype', 'N/A')}</p>
             <p><strong>Number of Orbits:</strong> {passport_data.get('num_orbits', 'N/A')}</p>
             <p><strong>Passport Size:</strong> {passport_data.get('pass_size', 'N/A')}</p>
+            <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{passport_label}" target="_blank">View on LMFDB</a></p>
         </div>
         
         <h2>Galmaps ({len(galmap_links)})</h2>
@@ -984,7 +986,7 @@ def generate_main_index():
     html_content = """<!DOCTYPE html>
 <html>
 <head>
-    <title>LMFDB Everett Diagrams</title>
+    <title>Dessins from the LMFDB</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -998,7 +1000,7 @@ def generate_main_index():
 <body>
     <div class="container">
         <div class="header">
-            <h1>LMFDB Everett Diagrams</h1>
+            <h1>Dessins from the LMFDB</h1>
             <p>Interactive visualizations of Belyi maps from the L-functions and Modular Forms Database</p>
         </div>
         
