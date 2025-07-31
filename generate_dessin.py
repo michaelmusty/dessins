@@ -29,17 +29,21 @@ logger.add(
 )
 
 # Mock LMFDB data - corrected to match actual LMFDB data
-# This passport only has one galmap, not two
+# This galmap has 2 triples, each with 3 permutations (σ₀, σ₁, σ∞)
 LMFDB_DATA = {
     "galmaps": {
         "7T6-4.2.1_3.2.2_3.2.2-a": {
             "label": "7T6-4.2.1_3.2.2_3.2.2-a",
             "plabel": "7T6-4.2.1_3.2.2_3.2.2",
             "deg": 7,
-            "triples_cyc": [["(1,6,5,3)(4,7)", "(1,2,3)(4,5)(6,7)"]],
+            "triples_cyc": [
+                ["(1,6,5,3)(4,7)", "(1,2,3)(4,5)(6,7)", "(1,2)(3,4,6)(5,7)"],
+                ["(1,5,3,7)(2,6)", "(1,2,3)(4,5)(6,7)", "(1,6)(2,7)(3,4,5)"]
+            ],
             "group": "7T6",
             "g": 0,
-            "geomtype": "S"
+            "geomtype": "H",
+            "orbit_size": 2
         }
     },
     "passports": {
@@ -50,7 +54,7 @@ LMFDB_DATA = {
             "pass_size": 1,
             "group": "7T6",
             "g": 0,
-            "geomtype": "S"
+            "geomtype": "H"
         }
     }
 }
@@ -124,23 +128,25 @@ def generate_galmap_page(galmap_data):
     # Generate individual diagram files
     diagram_files = []
     for i, triple in enumerate(triples_cyc):
-        if len(triple) >= 2:  # Need at least white and black permutations
-            white_perm = triple[0]
-            black_perm = triple[1]
+        if len(triple) >= 3:  # Need all three permutations (σ₀, σ₁, σ∞)
+            sigma0 = triple[0]
+            sigma1 = triple[1]
+            sigma_inf = triple[2]
             
             # Generate the diagram
             diagram_filename = f"diagram_{i+1}.html"
             diagram_path = galmap_dir / diagram_filename
             
             try:
-                generate_single_diagram(white_perm, black_perm, diagram_path, galmap_data["label"], galmap_data["plabel"])
+                generate_single_diagram(sigma0, sigma1, diagram_path, galmap_data["label"], galmap_data["plabel"])
                 diagram_files.append({
                     "filename": diagram_filename,
-                    "white": white_perm,
-                    "black": black_perm,
+                    "sigma0": sigma0,
+                    "sigma1": sigma1,
+                    "sigma_inf": sigma_inf,
                     "index": i+1
                 })
-                logger.info(f"Generated diagram {i+1}: {white_perm} vs {black_perm}")
+                logger.info(f"Generated diagram {i+1}: σ₀ = {sigma0}, σ₁ = {sigma1}, σ∞ = {sigma_inf}")
             except Exception as e:
                 logger.error(f"Failed to generate diagram {i+1}: {e}")
                 import traceback
@@ -856,6 +862,7 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
             <p><strong>Group:</strong> {galmap_data.get('group', 'N/A')}</p>
             <p><strong>Genus:</strong> {galmap_data.get('g', 'N/A')}</p>
             <p><strong>Geometric Type:</strong> {galmap_data.get('geomtype', 'N/A')}</p>
+            <p><strong>Orbit Size:</strong> {galmap_data.get('orbit_size', 'N/A')}</p>
             <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a></p>
         </div>
         
@@ -867,9 +874,7 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
         html_content += f"""
             <div class="diagram-item">
                 <h3><a href="{diagram['filename']}">Dessin {diagram['index']}</a></h3>
-                <p><strong>White:</strong> {diagram['white']}</p>
-                <p><strong>Black:</strong> {diagram['black']}</p>
-                <p><strong>Permutation Triple:</strong> σ₀ = {diagram['white']}, σ₁ = {diagram['black']}</p>
+                <p><strong>Permutation Triple:</strong> σ₀ = {diagram['sigma0']}, σ₁ = {diagram['sigma1']}, σ∞ = {diagram['sigma_inf']}</p>
             </div>
 """
     
