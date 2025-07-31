@@ -28,31 +28,211 @@ logger.add(
     level="INFO"
 )
 
-# Mock LMFDB data - corrected to match actual LMFDB data
-# This galmap has 2 triples, each with 3 permutations (σ₀, σ₁, σ∞)
+# Mock LMFDB data - genus zero passports up to degree 6
 LMFDB_DATA = {
     "galmaps": {
-        "7T6-4.2.1_3.2.2_3.2.2-a": {
-            "label": "7T6-4.2.1_3.2.2_3.2.2-a",
-            "plabel": "7T6-4.2.1_3.2.2_3.2.2",
-            "deg": 7,
+        # Degree 1
+        "1T1-1_1_1-a": {
+            "label": "1T1-1_1_1-a",
+            "plabel": "1T1-[1,1,1]-1-1-1-g0",
+            "deg": 1,
+            "triples_cyc": [["(1)", "(1)", "(1)"]],
+            "group": "1T1",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        # Degree 2
+        "2T1-2_2_1.1-a": {
+            "label": "2T1-2_2_1.1-a",
+            "plabel": "2T1-[2,2,1]-2-2-11-g0",
+            "deg": 2,
+            "triples_cyc": [["(1,2)", "(1,2)", "(1)(2)"]],
+            "group": "2T1",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        # Degree 3
+        "3T1-3_3_1.1.1-a": {
+            "label": "3T1-3_3_1.1.1-a",
+            "plabel": "3T1-[3,3,1]-3-3-111-g0",
+            "deg": 3,
+            "triples_cyc": [["(1,2,3)", "(1,2,3)", "(1)(2)(3)"]],
+            "group": "3T1",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        "3T2-3_2.1_2.1-a": {
+            "label": "3T2-3_2.1_2.1-a",
+            "plabel": "3T2-[3,2,2]-3-21-21-g0",
+            "deg": 3,
+            "triples_cyc": [["(1,2,3)", "(1,2)(3)", "(1,2)(3)"]],
+            "group": "3T2",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        # Degree 4
+        "4T1-4_4_1.1.1.1-a": {
+            "label": "4T1-4_4_1.1.1.1-a",
+            "plabel": "4T1-[4,4,1]-4-4-1111-g0",
+            "deg": 4,
+            "triples_cyc": [["(1,2,3,4)", "(1,2,3,4)", "(1)(2)(3)(4)"]],
+            "group": "4T1",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        "4T2-2.2_2.2_2.2-a": {
+            "label": "4T2-2.2_2.2_2.2-a",
+            "plabel": "4T2-[2,2,2]-22-22-22-g0",
+            "deg": 4,
+            "triples_cyc": [["(1,2)(3,4)", "(1,2)(3,4)", "(1,2)(3,4)"]],
+            "group": "4T2",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        # Degree 5
+        "5T1-5_5_1.1.1.1.1-a": {
+            "label": "5T1-5_5_1.1.1.1.1-a",
+            "plabel": "5T1-[5,5,1]-5-5-11111-g0",
+            "deg": 5,
+            "triples_cyc": [["(1,2,3,4,5)", "(1,2,3,4,5)", "(1)(2)(3)(4)(5)"]],
+            "group": "5T1",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        "5T3-4.1_4.1_2.2.1-a": {
+            "label": "5T3-4.1_4.1_2.2.1-a",
+            "plabel": "5T3-[4,4,2]-41-41-221-g0",
+            "deg": 5,
             "triples_cyc": [
-                ["(1,6,5,3)(4,7)", "(1,2,3)(4,5)(6,7)", "(1,2)(3,4,6)(5,7)"],
-                ["(1,5,3,7)(2,6)", "(1,2,3)(4,5)(6,7)", "(1,6)(2,7)(3,4,5)"]
+                ["(1,2,3,4)(5)", "(1,2,3,4)(5)", "(1,2)(3,4)(5)"],
+                ["(1,2,3,5)(4)", "(1,2,3,4)(5)", "(1,2)(3,5)(4)"]
             ],
-            "group": "7T6",
+            "group": "5T3",
             "g": 0,
             "geomtype": "H",
             "orbit_size": 2
+        },
+        # Degree 6
+        "6T1-6_6_1.1.1.1.1.1-a": {
+            "label": "6T1-6_6_1.1.1.1.1.1-a",
+            "plabel": "6T1-[6,6,1]-6-6-111111-g0",
+            "deg": 6,
+            "triples_cyc": [["(1,2,3,4,5,6)", "(1,2,3,4,5,6)", "(1)(2)(3)(4)(5)(6)"]],
+            "group": "6T1",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 1
+        },
+        "6T16-3.2.1_3.2.1_3.3-a": {
+            "label": "6T16-3.2.1_3.2.1_3.3-a",
+            "plabel": "6T16-[6,6,3]-321-321-33-g0",
+            "deg": 6,
+            "triples_cyc": [
+                ["(1,2,3)(4,5)(6)", "(1,2,3)(4,5)(6)", "(1,2,3)(4,5,6)"],
+                ["(1,2,3)(4,6)(5)", "(1,2,3)(4,5)(6)", "(1,2,3)(4,6,5)"],
+                ["(1,2,4)(3,5)(6)", "(1,2,3)(4,5)(6)", "(1,2,4)(3,5,6)"]
+            ],
+            "group": "6T16",
+            "g": 0,
+            "geomtype": "H",
+            "orbit_size": 3
         }
     },
     "passports": {
-        "7T6-4.2.1_3.2.2_3.2.2": {
-            "plabel": "7T6-4.2.1_3.2.2_3.2.2",
-            "deg": 7,
+        "1T1-[1,1,1]-1-1-1-g0": {
+            "plabel": "1T1-[1,1,1]-1-1-1-g0",
+            "deg": 1,
             "num_orbits": 1,
             "pass_size": 1,
-            "group": "7T6",
+            "group": "1T1",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "2T1-[2,2,1]-2-2-11-g0": {
+            "plabel": "2T1-[2,2,1]-2-2-11-g0",
+            "deg": 2,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "2T1",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "3T1-[3,3,1]-3-3-111-g0": {
+            "plabel": "3T1-[3,3,1]-3-3-111-g0",
+            "deg": 3,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "3T1",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "3T2-[3,2,2]-3-21-21-g0": {
+            "plabel": "3T2-[3,2,2]-3-21-21-g0",
+            "deg": 3,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "3T2",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "4T1-[4,4,1]-4-4-1111-g0": {
+            "plabel": "4T1-[4,4,1]-4-4-1111-g0",
+            "deg": 4,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "4T1",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "4T2-[2,2,2]-22-22-22-g0": {
+            "plabel": "4T2-[2,2,2]-22-22-22-g0",
+            "deg": 4,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "4T2",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "5T1-[5,5,1]-5-5-11111-g0": {
+            "plabel": "5T1-[5,5,1]-5-5-11111-g0",
+            "deg": 5,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "5T1",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "5T3-[4,4,2]-41-41-221-g0": {
+            "plabel": "5T3-[4,4,2]-41-41-221-g0",
+            "deg": 5,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "5T3",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "6T1-[6,6,1]-6-6-111111-g0": {
+            "plabel": "6T1-[6,6,1]-6-6-111111-g0",
+            "deg": 6,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "6T1",
+            "g": 0,
+            "geomtype": "H"
+        },
+        "6T16-[6,6,3]-321-321-33-g0": {
+            "plabel": "6T16-[6,6,3]-321-321-33-g0",
+            "deg": 6,
+            "num_orbits": 1,
+            "pass_size": 1,
+            "group": "6T16",
             "g": 0,
             "geomtype": "H"
         }
@@ -874,7 +1054,7 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
         html_content += f"""
             <div class="diagram-item">
                 <h3><a href="{diagram['filename']}">Dessin {diagram['index']}</a></h3>
-                <p><strong>Permutation Triple:</strong> σ₀ = {diagram['sigma0']}, σ₁ = {diagram['sigma1']}, σ∞ = {diagram['sigma_inf']}</p>
+                <p>σ₀ = {diagram['sigma0']}, σ₁ = {diagram['sigma1']}, σ∞ = {diagram['sigma_inf']}</p>
             </div>
 """
     
@@ -996,8 +1176,7 @@ def generate_main_index():
 <body>
     <div class="container">
         <div class="header">
-            <h1>Dessins from the LMFDB</h1>
-            <p>Interactive visualizations of Belyi maps from the L-functions and Modular Forms Database</p>
+            <h1>Genus zero dessins</h1>
         </div>
         
         <h2>Passports</h2>

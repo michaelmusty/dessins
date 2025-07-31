@@ -1,30 +1,27 @@
 #!/usr/bin/env python3
 """
-Check detailed LMFDB data for galmap 7T6-4.2.1_3.2.2_3.2.2-a
+Get all genus zero passports up to degree 6 from LMFDB
 """
 
 from lmf import db
 
-def check_galmap_details():
-    galmap_label = "7T6-4.2.1_3.2.2_3.2.2-a"
+def get_genus_zero_passports():
+    print("Getting genus zero passports up to degree 6...")
+    print("=" * 60)
     
-    print(f"Checking galmap: {galmap_label}")
-    print("=" * 50)
+    # Get all genus zero passports up to degree 6
+    passports = list(db.belyi_passports.search({"g": 0, "deg": {"$lte": 6}}, limit=50))
+    print(f"Found {len(passports)} genus zero passports up to degree 6:")
     
-    # Get galmap data
-    galmaps = list(db.belyi_galmaps.search({"label": galmap_label}))
-    print(f"Found {len(galmaps)} galmap(s)")
-    
-    for galmap in galmaps:
-        print(f"Galmap: {galmap['label']}")
-        print(f"  Passport: {galmap['BelyiDB_plabel']}")
-        print(f"  Degree: {galmap.get('deg', 'N/A')}")
-        print(f"  Genus: {galmap.get('g', 'N/A')}")
-        print(f"  Geometric Type: {galmap.get('geomtype', 'N/A')}")
-        print(f"  Orbit Size: {galmap.get('orbit_size', 'N/A')}")
-        print(f"  Triples: {galmap['triples_cyc']}")
-        print(f"  All fields: {list(galmap.keys())}")
+    for passport in passports:
+        print(f"  {passport['BelyiDB_plabel']} (degree {passport['deg']}, {passport.get('num_orbits', 'N/A')} orbits)")
+        
+        # Get galmaps for this passport
+        galmaps = list(db.belyi_galmaps.search({"BelyiDB_plabel": passport['BelyiDB_plabel']}))
+        print(f"    Has {len(galmaps)} galmap(s)")
+        for galmap in galmaps:
+            print(f"      - {galmap['label']} (orbit size: {galmap.get('orbit_size', 'N/A')})")
         print()
 
 if __name__ == "__main__":
-    check_galmap_details() 
+    get_genus_zero_passports() 
