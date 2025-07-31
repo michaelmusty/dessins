@@ -28,8 +28,8 @@ logger.add(
     level="INFO"
 )
 
-# Mock LMFDB data - replace with actual lmfdb_lite interface
-# This is a placeholder structure based on the schema you provided
+# Mock LMFDB data - corrected to match actual LMFDB data
+# This passport only has one galmap, not two
 LMFDB_DATA = {
     "galmaps": {
         "7T6-4.2.1_3.2.2_3.2.2-a": {
@@ -40,23 +40,14 @@ LMFDB_DATA = {
             "group": "7T6",
             "g": 0,
             "geomtype": "S"
-        },
-        "7T6-4.2.1_3.2.2_3.2.2-b": {
-            "label": "7T6-4.2.1_3.2.2_3.2.2-b", 
-            "plabel": "7T6-4.2.1_3.2.2_3.2.2",
-            "deg": 7,
-            "triples_cyc": [["(1,2,3,4)(5,6,7)", "(1,5)(2,6)(3,7)(4)"]],
-            "group": "7T6",
-            "g": 0,
-            "geomtype": "S"
         }
     },
     "passports": {
         "7T6-4.2.1_3.2.2_3.2.2": {
             "plabel": "7T6-4.2.1_3.2.2_3.2.2",
             "deg": 7,
-            "num_orbits": 2,
-            "pass_size": 2,
+            "num_orbits": 1,
+            "pass_size": 1,
             "group": "7T6",
             "g": 0,
             "geomtype": "S"
