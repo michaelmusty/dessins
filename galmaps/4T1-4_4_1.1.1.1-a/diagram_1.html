@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dessin: (1,2,3,4) vs (1,2,3,4)</title>
+    <title>Dessin: (1,2,3,4) vs (1,4,3,2)</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
@@ -130,7 +130,7 @@
                 { start: [0, 0], end: [1.4, 0.0], label: "1", labelX: 0.7, labelY: 0.0 },
             ],
             curvedEdges: [
-                { id: 0, start: [1.4, 0.0], end: [0, 0], control1: [1.3999999999999997, -1.394011924982025], control2: [8.535861209512386e-17, 1.394011924982025], label: "2", labelX: 0.7, labelY: 0.0 },                { id: 1, start: [0, 0], end: [1.4, 0.0], control1: [-1.692, 2.0721023841573215e-16], control2: [3.0919999999999996, -4.144204768314643e-16], label: "3", labelX: 0.7, labelY: -7.770383940589956e-17 },                { id: 2, start: [1.4, 0.0], end: [0, 0], control1: [1.4000000000000004, 1.394011924982025], control2: [-2.5607583628537156e-16, -1.394011924982025], label: "4", labelX: 0.7000000000000001, labelY: 0.0 },
+                { id: 0, start: [1.4, 0.0], end: [0, 0], control1: [1.4, -0.7799999999999999], control2: [-1.432836755002403e-16, -0.7799999999999999], label: "4", labelX: 0.7, labelY: -0.585 },                { id: 1, start: [0, 0], end: [1.4, 0.0], control1: [4.7761225166746774e-17, 0.7799999999999999], control2: [1.4000000000000001, 0.7799999999999999], label: "2", labelX: 0.7, labelY: 0.585 },                { id: 2, start: [1.4, 0.0], end: [0, 0], control1: [3.0919999999999996, -4.144204768314643e-16], control2: [-1.692, 2.0721023841573215e-16], label: "3", labelX: 0.7000000000000001, labelY: -7.770383940589956e-17 },
             ]
         };
 
@@ -159,7 +159,7 @@
 
         // Create control points data
         const controlPoints = [
-                { id: "P1_2", x: 1.3999999999999997, y: -1.394011924982025, label: "P1_2", edgeId: 0, control: 1 },                { id: "P2_2", x: 8.535861209512386e-17, y: 1.394011924982025, label: "P2_2", edgeId: 0, control: 2 },                { id: "P1_3", x: -1.692, y: 2.0721023841573215e-16, label: "P1_3", edgeId: 1, control: 1 },                { id: "P2_3", x: 3.0919999999999996, y: -4.144204768314643e-16, label: "P2_3", edgeId: 1, control: 2 },                { id: "P1_4", x: 1.4000000000000004, y: 1.394011924982025, label: "P1_4", edgeId: 2, control: 1 },                { id: "P2_4", x: -2.5607583628537156e-16, y: -1.394011924982025, label: "P2_4", edgeId: 2, control: 2 },
+                { id: "P1_4", x: 1.4, y: -0.7799999999999999, label: "P1_4", edgeId: 0, control: 1 },                { id: "P2_4", x: -1.432836755002403e-16, y: -0.7799999999999999, label: "P2_4", edgeId: 0, control: 2 },                { id: "P1_2", x: 4.7761225166746774e-17, y: 0.7799999999999999, label: "P1_2", edgeId: 1, control: 1 },                { id: "P2_2", x: 1.4000000000000001, y: 0.7799999999999999, label: "P2_2", edgeId: 1, control: 2 },                { id: "P1_3", x: 3.0919999999999996, y: -4.144204768314643e-16, label: "P1_3", edgeId: 2, control: 1 },                { id: "P2_3", x: -1.692, y: 2.0721023841573215e-16, label: "P2_3", edgeId: 2, control: 2 },
         ];
 
         // Draw straight edges (first, so they go under vertices)

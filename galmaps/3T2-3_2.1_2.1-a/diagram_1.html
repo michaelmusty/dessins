@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dessin: (1,2,3) vs (1,2)(3)</title>
+    <title>Dessin: (1,2,3) vs (2,3)</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
@@ -124,13 +124,13 @@
         // Define the graph data
         const graphData = {
             vertices: [
-                { id: "w1", x: 0, y: 0, color: "white", textColor: "black" },                { id: "b1", x: 1.4, y: 0.0, color: "black", textColor: "white" },                { id: "b2", x: -0.7000000000000006, y: -1.2124355652982137, color: "black", textColor: "white" },
+                { id: "w1", x: 0, y: 0, color: "white", textColor: "black" },                { id: "b1", x: 1.4, y: 0.0, color: "black", textColor: "white" },                { id: "b2", x: -0.6999999999999997, y: 1.2124355652982142, color: "black", textColor: "white" },
             ],
             straightEdges: [
-                { start: [0, 0], end: [1.4, 0.0], label: "1", labelX: 0.7, labelY: 0.0 },                { start: [0, 0], end: [-0.7000000000000006, -1.2124355652982137], label: "3", labelX: -0.3500000000000003, labelY: -0.6062177826491069 },
+                { start: [0, 0], end: [1.4, 0.0], label: "1", labelX: 0.7, labelY: 0.0 },                { start: [0, 0], end: [-0.6999999999999997, 1.2124355652982142], label: "2", labelX: -0.34999999999999987, labelY: 0.6062177826491071 },
             ],
             curvedEdges: [
-                { id: 0, start: [1.4, 0.0], end: [0, 0], control1: [2.7803064729247655, -3.380775807819374e-16], control2: [-0.6901532364623827, 1.1953804705609448], label: "2", labelX: 0.9588074636733936, labelY: 0.44826767646035415 },
+                { id: 0, start: [-0.6999999999999997, 1.2124355652982142], end: [0, 0], control1: [-1.3901532364623819, 2.4078160358591596], control2: [-0.6901532364623838, -1.1953804705609448], label: "3", labelX: -0.867614927346787, labelY: 0.6062177826491074 },
             ]
         };
 
@@ -159,7 +159,7 @@
 
         // Create control points data
         const controlPoints = [
-                { id: "P1_2", x: 2.7803064729247655, y: -3.380775807819374e-16, label: "P1_2", edgeId: 0, control: 1 },                { id: "P2_2", x: -0.6901532364623827, y: 1.1953804705609448, label: "P2_2", edgeId: 0, control: 2 },
+                { id: "P1_3", x: -1.3901532364623819, y: 2.4078160358591596, label: "P1_3", edgeId: 0, control: 1 },                { id: "P2_3", x: -0.6901532364623838, y: -1.1953804705609448, label: "P2_3", edgeId: 0, control: 2 },
         ];
 
         // Draw straight edges (first, so they go under vertices)

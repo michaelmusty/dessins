@@ -1,27 +1,41 @@
 #!/usr/bin/env python3
 """
-Get all genus zero passports up to degree 6 from LMFDB
+Check actual permutation triples for galmaps from LMFDB
 """
 
 from lmf import db
 
-def get_genus_zero_passports():
-    print("Getting genus zero passports up to degree 6...")
-    print("=" * 60)
+def check_galmap_triples():
+    galmaps_to_check = [
+        "5T3-4.1_4.1_2.2.1-a",
+        "6T16-3.2.1_3.2.1_3.3-a"
+    ]
     
-    # Get all genus zero passports up to degree 6
-    passports = list(db.belyi_passports.search({"g": 0, "deg": {"$lte": 6}}, limit=50))
-    print(f"Found {len(passports)} genus zero passports up to degree 6:")
-    
-    for passport in passports:
-        print(f"  {passport['BelyiDB_plabel']} (degree {passport['deg']}, {passport.get('num_orbits', 'N/A')} orbits)")
+    for galmap_label in galmaps_to_check:
+        print(f"Checking galmap: {galmap_label}")
+        print("=" * 60)
         
-        # Get galmaps for this passport
-        galmaps = list(db.belyi_galmaps.search({"BelyiDB_plabel": passport['BelyiDB_plabel']}))
-        print(f"    Has {len(galmaps)} galmap(s)")
+        # Get galmap data
+        galmaps = list(db.belyi_galmaps.search({"label": galmap_label}))
+        print(f"Found {len(galmaps)} galmap(s)")
+        
         for galmap in galmaps:
-            print(f"      - {galmap['label']} (orbit size: {galmap.get('orbit_size', 'N/A')})")
-        print()
+            print(f"Galmap: {galmap['label']}")
+            print(f"  Passport: {galmap['BelyiDB_plabel']}")
+            print(f"  Degree: {galmap.get('deg', 'N/A')}")
+            print(f"  Orbit Size: {galmap.get('orbit_size', 'N/A')}")
+            print(f"  Triples (cycle): {galmap['triples_cyc']}")
+            print()
+            
+            # Show each triple separately
+            for i, triple in enumerate(galmap['triples_cyc']):
+                print(f"  Triple {i+1}:")
+                print(f"    σ₀ = {triple[0]}")
+                print(f"    σ₁ = {triple[1]}")
+                print(f"    σ∞ = {triple[2]}")
+                print()
+        
+        print("\n" + "="*60 + "\n")
 
 if __name__ == "__main__":
-    get_genus_zero_passports() 
+    check_galmap_triples() 
