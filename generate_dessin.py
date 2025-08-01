@@ -64,7 +64,7 @@ def get_lmfdb_galmap(galmap_label):
 
 def get_lmfdb_passport(passport_label):
     """Get passport data from LMFDB using lmfdb_lite"""
-    passports = list(db.belyi_passports.search({"BelyiDB_plabel": passport_label}))
+    passports = list(db.belyi_passports.search({"plabel": passport_label}))
     if passports:
         return passports[0]
     return None
@@ -72,7 +72,7 @@ def get_lmfdb_passport(passport_label):
 
 def get_galmaps_by_passport(passport_label):
     """Get all galmaps for a given passport using lmfdb_lite"""
-    galmaps = list(db.belyi_galmaps.search({"BelyiDB_plabel": passport_label}))
+    galmaps = list(db.belyi_galmaps.search({"plabel": passport_label}))
     return galmaps
 
 
@@ -94,7 +94,7 @@ def generate_galmap_page(galmap_label):
         logger.error(f"Galmap {galmap_label} not found")
         return
     
-    passport_label = galmap_data["BelyiDB_plabel"]
+    passport_label = galmap_data["plabel"]
     triples_cyc = galmap_data["triples_cyc"]
     
     logger.info(f"Generating galmap page for {galmap_label}")
@@ -337,14 +337,80 @@ def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, p
     logger.info(f"Total straight edges: {len(straight)}")
     logger.info(f"Total curved edges: {len(curves)}")
 
+    # Calculate the third permutation (σ∞) from σ₀ and σ₁
+    # σ₀ * σ₁ * σ∞ = identity, so σ∞ = (σ₀ * σ₁)^(-1)
+    def multiply_permutations(perm1, perm2):
+        """Multiply two permutations in cycle notation"""
+        # Convert to mapping representation
+        n = max(max(int(x) for x in str(perm1).replace('(', '').replace(')', '').split(',') if x.strip().isdigit()),
+                max(int(x) for x in str(perm2).replace('(', '').replace(')', '').split(',') if x.strip().isdigit()))
+        
+        # Create mapping for perm1
+        mapping1 = {}
+        for cycle in perm1.strip('()').split(')('):
+            cycle = cycle.strip('()')
+            if cycle:
+                nums = [int(x.strip()) for x in cycle.split(',')]
+                for i in range(len(nums)):
+                    mapping1[nums[i]] = nums[(i + 1) % len(nums)]
+        
+        # Create mapping for perm2
+        mapping2 = {}
+        for cycle in perm2.strip('()').split(')('):
+            cycle = cycle.strip('()')
+            if cycle:
+                nums = [int(x.strip()) for x in cycle.split(',')]
+                for i in range(len(nums)):
+                    mapping2[nums[i]] = nums[(i + 1) % len(nums)]
+        
+        # Multiply permutations: (perm1 * perm2)(i) = perm1(perm2(i))
+        result_mapping = {}
+        for i in range(1, n + 1):
+            result_mapping[i] = mapping1.get(mapping2.get(i, i), mapping2.get(i, i))
+        
+        # Convert back to cycle notation
+        visited = set()
+        cycles = []
+        for i in range(1, n + 1):
+            if i not in visited:
+                cycle = []
+                j = i
+                while j not in visited:
+                    visited.add(j)
+                    cycle.append(j)
+                    j = result_mapping.get(j, j)
+                if len(cycle) > 1:
+                    cycles.append('(' + ','.join(map(str, cycle)) + ')')
+        
+        return ''.join(cycles) if cycles else '(1)'
+    
+    def inverse_permutation(perm):
+        """Calculate the inverse of a permutation"""
+        # For a cycle (a,b,c), the inverse is (c,b,a)
+        if perm == '(1)':
+            return '(1)'
+        
+        result = []
+        for cycle in perm.strip('()').split(')('):
+            cycle = cycle.strip('()')
+            if cycle:
+                nums = [int(x.strip()) for x in cycle.split(',')]
+                result.append('(' + ','.join(map(str, reversed(nums))) + ')')
+        
+        return ''.join(result)
+    
+    # Calculate σ∞ = (σ₀ * σ₁)^(-1)
+    product = multiply_permutations(white_perm, black_perm)
+    sigma_inf = inverse_permutation(product)
+    
     # Generate HTML
-    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, galmap_label, passport_label)
+    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label)
     
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
 
-def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, galmap_label, passport_label):
+def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label):
     """Generate the interactive HTML content (simplified version)"""
     # Build vertices data
     vertices_data = []
@@ -495,6 +561,7 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
         <a href="index.html">← Back to Galmap</a>
         <a href="../../passports/{passport_label}/index.html">← Back to Passport</a>
         <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a>
+        <span style="margin-left: 20px; font-weight: bold;">σ₀ = {white_perm}, σ₁ = {black_perm}, σ∞ = {sigma_inf}</span>
     </div>
     <div class="container">
         <div class="button-container">
@@ -889,7 +956,8 @@ def generate_passport_page(passport_label):
             "label": galmap["label"],
             "path": f"/dessins/galmaps/{galmap['label']}/index.html",
             "deg": galmap.get("deg", "N/A"),
-            "g": galmap.get("g", "N/A")
+            "g": galmap.get("g", "N/A"),
+            "orbit_size": galmap.get("orbit_size", "N/A")
         })
     
     # Generate passport index page
@@ -938,6 +1006,7 @@ def generate_passport_page(passport_label):
                 <h3><a href="{galmap['path']}">{galmap['label']}</a></h3>
                 <p><strong>Degree:</strong> {galmap['deg']}</p>
                 <p><strong>Genus:</strong> {galmap['g']}</p>
+                <p><strong>Orbit Size:</strong> {galmap['orbit_size']}</p>
             </div>
 """
     
@@ -965,6 +1034,7 @@ def generate_main_index():
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
+        .passport-section { margin-bottom: 30px; }
         .passport-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
         .passport-item { border: 1px solid #ccc; padding: 15px; text-align: center; }
         .passport-item a { text-decoration: none; color: #007bff; }
@@ -975,23 +1045,42 @@ def generate_main_index():
 <body>
     <div class="container">
         <div class="header">
-            <h1>Genus zero dessins</h1>
+            <h1>Dessins from the LMFDB</h1>
         </div>
         
-        <h2>Passports</h2>
-        <div class="passport-grid">
 """
     
+    # Group passports by degree
+    passports_by_degree = {}
     for passport in passports:
-        passport_label = passport['BelyiDB_plabel']
+        degree = passport.get('deg', 0)
+        if degree not in passports_by_degree:
+            passports_by_degree[degree] = []
+        passports_by_degree[degree].append(passport)
+    
+    # Generate sections for each degree
+    for degree in sorted(passports_by_degree.keys()):
         html_content += f"""
-            <div class="passport-item">
-                <h3><a href="/dessins/passports/{passport_label}/index.html">{passport_label}</a></h3>
-                <p><strong>Degree:</strong> {passport.get('deg', 'N/A')}</p>
-                <p><strong>Group:</strong> {passport.get('group', 'N/A')}</p>
-                <p><strong>Genus:</strong> {passport.get('g', 'N/A')}</p>
-                <p><strong>Orbits:</strong> {passport.get('num_orbits', 'N/A')}</p>
+        <div class="passport-section">
+            <h2>Degree {degree} Passports</h2>
+            <div class="passport-grid">
+"""
+        
+        for passport in passports_by_degree[degree]:
+            passport_label = passport['plabel']
+            html_content += f"""
+                <div class="passport-item">
+                    <h3><a href="/dessins/passports/{passport_label}/index.html">{passport_label}</a></h3>
+                    <p><strong>Degree:</strong> {passport.get('deg', 'N/A')}</p>
+                    <p><strong>Group:</strong> {passport.get('group', 'N/A')}</p>
+                    <p><strong>Genus:</strong> {passport.get('g', 'N/A')}</p>
+                    <p><strong>Orbits:</strong> {passport.get('num_orbits', 'N/A')}</p>
+                </div>
+"""
+        
+        html_content += """
             </div>
+        </div>
 """
     
     html_content += """
@@ -1043,12 +1132,12 @@ def main():
         
         # Generate all passport pages
         for passport in passports:
-            passport_label = passport['BelyiDB_plabel']
+            passport_label = passport['plabel']
             generate_passport_page(passport_label)
         
         # Get all galmaps for these passports
         for passport in passports:
-            passport_label = passport['BelyiDB_plabel']
+            passport_label = passport['plabel']
             galmaps = get_galmaps_by_passport(passport_label)
             for galmap in galmaps:
                 galmap_label = galmap['label']
