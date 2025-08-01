@@ -842,7 +842,7 @@ def generate_galmap_index(galmap_data, diagram_files, galmap_dir):
             <p><strong>Genus:</strong> {galmap_data.get('g', 'N/A')}</p>
             <p><strong>Geometric Type:</strong> {galmap_data.get('geomtype', 'N/A')}</p>
             <p><strong>Orbit Size:</strong> {galmap_data.get('orbit_size', 'N/A')}</p>
-            <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a></p>
+            <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{galmap_data.get('label', galmap_label)}" target="_blank">View on LMFDB</a></p>
         </div>
         
         <h2>Dessins ({len(diagram_files)})</h2>
@@ -925,7 +925,7 @@ def generate_passport_page(passport_label):
             <p><strong>Geometric Type:</strong> {passport_data.get('geomtype', 'N/A')}</p>
             <p><strong>Number of Orbits:</strong> {passport_data.get('num_orbits', 'N/A')}</p>
             <p><strong>Passport Size:</strong> {passport_data.get('pass_size', 'N/A')}</p>
-            <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{passport_label}" target="_blank">View on LMFDB</a></p>
+            <p><strong>LMFDB:</strong> <a href="https://beta.lmfdb.org/Belyi/{passport_data.get('label', passport_label)}" target="_blank">View on LMFDB</a></p>
         </div>
         
         <h2>Galmaps ({len(galmap_links)})</h2>
