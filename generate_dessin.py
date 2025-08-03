@@ -546,6 +546,7 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
 <head>
     <title>Dessin: σ₀ = {white_perm}, σ₁ = {black_perm}</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         body {{ margin: 0; padding: 0; font-family: Arial, sans-serif; }}
         .nav {{
@@ -638,6 +639,7 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             <button class="toggle-button" onclick="toggleControlPoints()">Hide Control Points</button>
             <button class="toggle-button" onclick="toggleVertexLabels()">Hide Vertex Labels</button>
             <button class="toggle-button" onclick="toggleEdgeLabels()">Hide Edge Labels</button>
+            <button class="toggle-button" onclick="captureScreen()">Screen Capture</button>
         </div>
         <div id="graph"></div>
     </div>
@@ -934,6 +936,28 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             }});
             
             button.textContent = isVisible ? 'Show Edge Labels' : 'Hide Edge Labels';
+        }};
+        
+        // Screen capture function
+        function captureScreen() {{
+            // Create filename with LMFDB label and permutation triple
+            const filename = '{galmap_label}_σ₀={white_perm}_σ₁={black_perm}_σ∞={sigma_inf}.png';
+            
+            // Capture the entire body (including nav bar with metadata)
+            html2canvas(document.body, {{
+                backgroundColor: 'white',
+                scale: 2, // Higher resolution
+                useCORS: true,
+                allowTaint: true,
+                width: window.innerWidth,
+                height: window.innerHeight
+            }}).then(canvas => {{
+                // Create download link
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }});
         }};
     </script>
 </body>
