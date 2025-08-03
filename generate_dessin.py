@@ -968,10 +968,10 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             yPos += lineHeight;
             
             // Add base field if available
-            {f'ctx.fillText(`Base field: {format_minimal_polynomial(base_field)}`, 20, yPos); yPos += lineHeight;' if base_field else '// No base field data'}
+            {f'ctx.fillText(`Base field: {format_minimal_polynomial(base_field)}`, 20, yPos); yPos += lineHeight;' if base_field else ''}
             
             // Add embedding if available
-            {f'ctx.fillText(`Embedding: {format_embedding(embeddings[embedding_index])}`, 20, yPos); yPos += lineHeight;' if embeddings and embedding_index is not None and embedding_index < len(embeddings) else '// No embedding data'}
+            {f'ctx.fillText(`Embedding: {format_embedding(embeddings[embedding_index])}`, 20, yPos); yPos += lineHeight;' if embeddings and embedding_index is not None and embedding_index < len(embeddings) else ''}
             
             // Get the SVG element and its natural dimensions
             const svgElement = document.querySelector('#graph svg');
