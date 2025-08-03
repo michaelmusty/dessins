@@ -468,16 +468,16 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
                 return f"{real:.6f}"
             elif abs(real) < 1e-10:
                 if abs(imag - 1) < 1e-10:
-                    return "\\sqrt{-1}"
+                    return "√(-1)"
                 elif abs(imag + 1) < 1e-10:
-                    return "-\\sqrt{-1}"
+                    return "-√(-1)"
                 else:
-                    return f"{imag:.6f}\\sqrt{{-1}}"
+                    return f"{imag:.6f}√(-1)"
             else:
                 if imag > 0:
-                    return f"{real:.6f} + {imag:.6f}\\sqrt{{-1}}"
+                    return f"{real:.6f} + {imag:.6f}√(-1)"
                 else:
-                    return f"{real:.6f} - {abs(imag):.6f}\\sqrt{{-1}}"
+                    return f"{real:.6f} - {abs(imag):.6f}√(-1)"
         return str(embedding)
     
     # Build vertices data
