@@ -1167,8 +1167,8 @@ def generate_passport_page(passport_label):
 
 def generate_main_index():
     """Generate the main index page"""
-    # Get all passports up to degree 6 from LMFDB (no genus filter)
-    passports = list(db.belyi_passports.search({"deg": {"$lte": 6}}))
+    # Get all passports up to degree 9 from LMFDB (no genus filter)
+    passports = list(db.belyi_passports.search({"deg": {"$lte": 9}}))
     
     html_content = """<!DOCTYPE html>
 <html>
@@ -1312,8 +1312,8 @@ def main():
     
     elif args.all:
         # Generate all data
-        # Get all passports up to degree 6 from LMFDB (no genus filter)
-        passports = list(db.belyi_passports.search({"deg": {"$lte": 6}}))
+        # Get all passports up to degree 9 from LMFDB (no genus filter)
+        passports = list(db.belyi_passports.search({"deg": {"$lte": 9}}))
         
         # Generate all passport pages
         for passport in passports:

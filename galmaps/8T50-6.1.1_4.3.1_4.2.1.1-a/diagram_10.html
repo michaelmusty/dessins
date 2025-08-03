@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dessin: σ₀ = (1,2,3,4,5,6), σ₁ = (1,5,4,2)(3,7,8)</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        .nav {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        .nav a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        .container { width: 100%; height: calc(100vh - 50px); position: relative; }
+        .control-point {
+            cursor: move;
+            fill: #007bff;
+            stroke: #0056b3;
+            stroke-width: 1;
+        }
+        .control-point:hover { fill: #0056b3; }
+        .control-label {
+            font-size: 10px;
+            fill: #007bff;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .edge { stroke: black; stroke-width: 1; fill: none; }
+        .vertex { cursor: default; }
+        .vertex-text {
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+        .edge-label {
+            font-size: 14px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .edge-label-bg {
+            fill: white;
+            stroke: black;
+            stroke-width: 1;
+            rx: 3;
+            ry: 3;
+        }
+        .toggle-button {
+            padding: 8px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1000;
+            width: 140px;
+            white-space: nowrap;
+        }
+        .toggle-button:hover {
+            background: #218838;
+        }
+        .button-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="index.html">← Back to Galmap</a>
+        <a href="../../passports/8T50-6.1.1_4.3.1_4.2.1.1/index.html">← Back to Passport</a>
+        <a href="https://beta.lmfdb.org/Belyi/8T50-6.1.1_4.3.1_4.2.1.1-a" target="_blank">View on LMFDB</a>
+        <span style="margin-left: 20px; font-weight: bold;">σ₀ = (1,2,3,4,5,6), σ₁ = (1,5,4,2)(3,7,8), σ∞ = (6,1)(4,8,7,3)</span>
+        <span style="margin-left: 20px;">Base field: 1 - 6T + 3T^2 + 4T^3 + 150T^4 + 12T^5 - 3438T^6 + 11208T^7 - 13296T^8 + 1396T^9 + 7368T^10 + 3780T^11 - 15306T^12 + 6060T^13 + 7866T^14 - 6296T^15 - 993T^16 + 1770T^17 - 355T^18</span>
+        <span style="margin-left: 20px;">Embedding: 3.972529</span>
+    </div>
+    <div class="container">
+        <div class="button-container">
+            <button class="toggle-button" onclick="toggleControlPoints()">Hide Control Points</button>
+            <button class="toggle-button" onclick="toggleVertexLabels()">Hide Vertex Labels</button>
+            <button class="toggle-button" onclick="toggleEdgeLabels()">Hide Edge Labels</button>
+            <button class="toggle-button" onclick="captureScreen()">Screen Capture</button>
+        </div>
+        <div id="graph"></div>
+    </div>
+
+    <script>
+        // Set up the SVG - use full container size
+        const width = window.innerWidth;
+        const height = window.innerHeight - 50; // Account for nav bar
+        const margin = 50;
+
+        const svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("border", "1px solid #ccc")
+            .style("background", "white");
+
+        // Add zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 10])
+            .on("zoom", function(event) {
+                graphGroup.attr("transform", event.transform);
+            });
+
+        svg.call(zoom);
+        
+        // Create a group for all graph elements
+        const graphGroup = svg.append("g");
+
+        // Define the graph data
+        const graphData = {
+            vertices: [
+                { id: "w1", x: 0, y: 0, color: "white", textColor: "black" },                { id: "b1", x: 1.4, y: 0.0, color: "black", textColor: "white" },                { id: "b3", x: 0.7000000000000001, y: -1.212435565298214, color: "black", textColor: "white" },                { id: "b2", x: -0.6999999999999997, y: 1.2124355652982142, color: "black", textColor: "white" },                { id: "w2", x: 1.887379141862766e-15, y: 2.4248711305964274, color: "white", textColor: "black" },                { id: "w3", x: -2.0999999999999996, y: 1.2124355652982146, color: "white", textColor: "black" },
+            ],
+            straightEdges: [
+                { start: [0, 0], end: [1.4, 0.0], label: "1", labelX: 0.7, labelY: 0.0 },                { start: [0, 0], end: [0.7000000000000001, -1.212435565298214], label: "6", labelX: 0.35000000000000003, labelY: -0.606217782649107 },                { start: [0, 0], end: [-0.6999999999999997, 1.2124355652982142], label: "3", labelX: -0.34999999999999987, labelY: 0.6062177826491071 },                { start: [-0.6999999999999997, 1.2124355652982142], end: [1.887379141862766e-15, 2.4248711305964274], label: "7", labelX: -0.3499999999999989, labelY: 1.8186533479473208 },                { start: [-0.6999999999999997, 1.2124355652982142], end: [-2.0999999999999996, 1.2124355652982146], label: "8", labelX: -1.3999999999999997, labelY: 1.2124355652982144 },
+            ],
+            curvedEdges: [
+                { id: 0, start: [1.4, 0.0], end: [0, 0], control1: [1.3999999999999997, -0.9248008964074564], control2: [-0.46240044820372866, -0.800901069731478], label: "5", labelX: 0.5265998319236017, labelY: -0.6471382373021004 },                { id: 1, start: [0, 0], end: [1.4, 0.0], control1: [0.41107855804824556, 0.7120089484417131], control2: [1.4000000000000001, 0.8221571160964909], label: "2", labelX: 0.8541544592680921, labelY: 0.5753122742018265 },                { id: 2, start: [1.4, 0.0], end: [0, 0], control1: [3.0919999999999996, -4.144204768314643e-16], control2: [-1.692, 2.0721023841573215e-16], label: "4", labelX: 0.7000000000000001, labelY: -7.770383940589956e-17 },
+            ]
+        };
+
+        // Calculate the bounds of the graph data
+        const allX = [...graphData.vertices.map(v => v.x), ...graphData.straightEdges.flatMap(e => [e.start[0], e.end[0]]), ...graphData.curvedEdges.flatMap(e => [e.start[0], e.end[0], e.control1[0], e.control2[0]])];
+        const allY = [...graphData.vertices.map(v => v.y), ...graphData.straightEdges.flatMap(e => [e.start[1], e.end[1]]), ...graphData.curvedEdges.flatMap(e => [e.start[1], e.end[1], e.control1[1], e.control2[1]])];
+        
+        const minX = Math.min(...allX);
+        const maxX = Math.max(...allX);
+        const minY = Math.min(...allY);
+        const maxY = Math.max(...allY);
+        
+        // Add some padding around the bounds
+        const padding = Math.max(maxX - minX, maxY - minY) * 0.1;
+        const xDomain = [minX - padding, maxX + padding];
+        const yDomain = [minY - padding, maxY + padding];
+        
+        // Scale to fit the graph data
+        const xScale = d3.scaleLinear()
+            .domain(xDomain)
+            .range([margin, width - margin]);
+
+        const yScale = d3.scaleLinear()
+            .domain(yDomain)
+            .range([height - margin, margin]);
+
+        // Create control points data
+        const controlPoints = [
+                { id: "P1_5", x: 1.3999999999999997, y: -0.9248008964074564, label: "P1_5", edgeId: 0, control: 1 },                { id: "P2_5", x: -0.46240044820372866, y: -0.800901069731478, label: "P2_5", edgeId: 0, control: 2 },                { id: "P1_2", x: 0.41107855804824556, y: 0.7120089484417131, label: "P1_2", edgeId: 1, control: 1 },                { id: "P2_2", x: 1.4000000000000001, y: 0.8221571160964909, label: "P2_2", edgeId: 1, control: 2 },                { id: "P1_4", x: 3.0919999999999996, y: -4.144204768314643e-16, label: "P1_4", edgeId: 2, control: 1 },                { id: "P2_4", x: -1.692, y: 2.0721023841573215e-16, label: "P2_4", edgeId: 2, control: 2 },
+        ];
+
+        // Draw straight edges (first, so they go under vertices)
+        graphGroup.selectAll(".straight-edge")
+            .data(graphData.straightEdges)
+            .enter()
+            .append("line")
+            .attr("class", "edge")
+            .attr("x1", d => xScale(d.start[0]))
+            .attr("y1", d => yScale(d.start[1]))
+            .attr("x2", d => xScale(d.end[0]))
+            .attr("y2", d => yScale(d.end[1]));
+
+        // Draw curved edges (first, so they go under vertices)
+        const curvedEdges = graphGroup.selectAll(".curved-edge")
+            .data(graphData.curvedEdges)
+            .enter()
+            .append("path")
+            .attr("class", "curved-edge edge")
+            .attr("d", d => `M ${xScale(d.start[0])} ${yScale(d.start[1])} C ${xScale(d.control1[0])} ${yScale(d.control1[1])} ${xScale(d.control2[0])} ${yScale(d.control2[1])} ${xScale(d.end[0])} ${yScale(d.end[1])}`);
+
+        // Draw vertices (after edges, so they appear on top)
+        const vertices = graphGroup.selectAll(".vertex")
+            .data(graphData.vertices)
+            .enter()
+            .append("circle")
+            .attr("class", "vertex")
+            .attr("cx", d => xScale(d.x))
+            .attr("cy", d => yScale(d.y))
+            .attr("r", 15)
+            .attr("fill", d => d.color)
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        // Add vertex labels
+        graphGroup.selectAll(".vertex-text")
+            .data(graphData.vertices)
+            .enter()
+            .append("text")
+            .attr("class", "vertex-text")
+            .attr("x", d => xScale(d.x))
+            .attr("y", d => yScale(d.y))
+            .attr("fill", d => d.textColor)
+            .text(d => d.id);
+
+        // Add straight edge labels with background rectangles
+        const straightEdgeLabels = graphGroup.selectAll(".straight-edge-label")
+            .data(graphData.straightEdges)
+            .enter()
+            .append("g")
+            .attr("class", "edge-label-group");
+
+        straightEdgeLabels.append("rect")
+            .attr("class", "edge-label-bg")
+            .attr("x", d => xScale(d.labelX) - 8)
+            .attr("y", d => yScale(d.labelY) - 8)
+            .attr("width", 16)
+            .attr("height", 16);
+
+        straightEdgeLabels.append("text")
+            .attr("class", "edge-label")
+            .attr("x", d => xScale(d.labelX))
+            .attr("y", d => yScale(d.labelY))
+            .text(d => d.label);
+
+        // Add curved edge labels with background rectangles
+        const curvedEdgeLabels = graphGroup.selectAll(".curved-edge-label")
+            .data(graphData.curvedEdges)
+            .enter()
+            .append("g")
+            .attr("class", "edge-label-group");
+
+        curvedEdgeLabels.append("rect")
+            .attr("class", "edge-label-bg")
+            .attr("x", d => xScale(d.labelX) - 8)
+            .attr("y", d => yScale(d.labelY) - 8)
+            .attr("width", 16)
+            .attr("height", 16);
+
+        curvedEdgeLabels.append("text")
+            .attr("class", "edge-label")
+            .attr("x", d => xScale(d.labelX))
+            .attr("y", d => yScale(d.labelY))
+            .text(d => d.label);
+
+        // Draw control points
+        const controlPointElements = graphGroup.selectAll(".control-point")
+            .data(controlPoints)
+            .enter()
+            .append("circle")
+            .attr("class", "control-point")
+            .attr("cx", d => xScale(d.x))
+            .attr("cy", d => yScale(d.y))
+            .attr("r", 6);
+
+        // Add control point labels
+        graphGroup.selectAll(".control-label")
+            .data(controlPoints)
+            .enter()
+            .append("text")
+            .attr("class", "control-label")
+            .attr("id", d => d.id)
+            .attr("x", d => xScale(d.x))
+            .attr("y", d => yScale(d.y) - 10)
+            .text(d => d.label);
+
+        // Function to update curved edge
+        function updateCurvedEdge(edgeId) {
+            // Find the edge and its control points
+            const edge = graphData.curvedEdges.find(e => e.id === edgeId);
+            const cp1 = controlPoints.find(cp => cp.edgeId === edgeId && cp.control === 1);
+            const cp2 = controlPoints.find(cp => cp.edgeId === edgeId && cp.control === 2);
+
+            // Update the control points in the edge data
+            edge.control1 = [cp1.x, cp1.y];
+            edge.control2 = [cp2.x, cp2.y];
+
+            // Update the path for this edge
+            graphGroup.selectAll(".curved-edge")
+                .filter(d => d.id === edgeId)
+                .attr("d", d => `M ${xScale(d.start[0])} ${yScale(d.start[1])} C ${xScale(edge.control1[0])} ${yScale(edge.control1[1])} ${xScale(edge.control2[0])} ${yScale(edge.control2[1])} ${xScale(d.end[0])} ${yScale(d.end[1])}`);
+            
+            // Update the edge label position
+            // Calculate a point on the curve at t=0.5 (middle of the curve)
+            const t = 0.5;
+            const x = Math.pow(1-t, 3) * edge.start[0] + 
+                      3 * Math.pow(1-t, 2) * t * edge.control1[0] + 
+                      3 * (1-t) * Math.pow(t, 2) * edge.control2[0] + 
+                      Math.pow(t, 3) * edge.end[0];
+            const y = Math.pow(1-t, 3) * edge.start[1] + 
+                      3 * Math.pow(1-t, 2) * t * edge.control1[1] + 
+                      3 * (1-t) * Math.pow(t, 2) * edge.control2[1] + 
+                      Math.pow(t, 3) * edge.end[1];
+            
+            // Update the label position and background rectangle
+            graphGroup.selectAll(".edge-label-group")
+                .filter(d => d.id === edgeId)
+                .select("rect")
+                .attr("x", xScale(x) - 8)
+                .attr("y", yScale(y) - 8);
+
+            graphGroup.selectAll(".edge-label-group")
+                .filter(d => d.id === edgeId)
+                .select("text")
+                .attr("x", xScale(x))
+                .attr("y", yScale(y));
+        }
+
+        // Drag behavior for control points
+        const drag = d3.drag()
+            .on("start", function(event, d) {
+                // Store initial positions
+                d.startX = d.x;
+                d.startY = d.y;
+                d.startEventX = event.x;
+                d.startEventY = event.y;
+            })
+            .on("drag", function(event, d) {
+                // Calculate the change in event coordinates
+                const deltaX = event.x - d.startEventX;
+                const deltaY = event.y - d.startEventY;
+                
+                // Convert delta to data coordinates using the scale
+                const deltaDataX = xScale.invert(d.startEventX + deltaX) - xScale.invert(d.startEventX);
+                const deltaDataY = yScale.invert(d.startEventY + deltaY) - yScale.invert(d.startEventY);
+                
+                // Update control point data (no boundary constraints)
+                d.x = d.startX + deltaDataX;
+                d.y = d.startY + deltaDataY;
+                
+                // Update visual position using the scale
+                const newSvgX = xScale(d.x);
+                const newSvgY = yScale(d.y);
+                
+                d3.select(this)
+                    .attr("cx", newSvgX)
+                    .attr("cy", newSvgY);
+
+                // Update label position
+                graphGroup.selectAll(".control-label")
+                    .filter(label => label.id === d.id)
+                    .attr("x", newSvgX)
+                    .attr("y", newSvgY - 10);
+
+                // Update the curve
+                updateCurvedEdge(d.edgeId);
+            });
+
+        // Apply drag behavior to control points
+        controlPointElements.call(drag);
+
+        // Toggle control points visibility
+        window.toggleControlPoints = function() {
+            const button = document.querySelector('.toggle-button');
+            const controlPoints = document.querySelectorAll('.control-point, .control-label');
+            const isVisible = controlPoints[0].style.display !== 'none';
+            
+            controlPoints.forEach(point => {
+                point.style.display = isVisible ? 'none' : 'block';
+            });
+            
+            button.textContent = isVisible ? 'Show Control Points' : 'Hide Control Points';
+        };
+
+        // Toggle vertex labels visibility
+        window.toggleVertexLabels = function() {
+            const button = document.querySelectorAll('.toggle-button')[1];
+            const vertexLabels = document.querySelectorAll('.vertex-text');
+            const isVisible = vertexLabels[0].style.display !== 'none';
+            
+            vertexLabels.forEach(label => {
+                label.style.display = isVisible ? 'none' : 'block';
+            });
+            
+            button.textContent = isVisible ? 'Show Vertex Labels' : 'Hide Vertex Labels';
+        };
+
+        // Toggle edge labels visibility
+        window.toggleEdgeLabels = function() {
+            const button = document.querySelectorAll('.toggle-button')[2];
+            const edgeLabels = document.querySelectorAll('.edge-label-group');
+            const isVisible = edgeLabels[0].style.display !== 'none';
+            
+            edgeLabels.forEach(label => {
+                label.style.display = isVisible ? 'none' : 'block';
+            });
+            
+            button.textContent = isVisible ? 'Show Edge Labels' : 'Hide Edge Labels';
+        };
+        
+        // Screen capture function
+        function captureScreen() {
+            // Create filename with LMFDB label and permutation triple
+            const filename = '8T50-6.1.1_4.3.1_4.2.1.1-a_σ₀=(1,2,3,4,5,6)_σ₁=(1,5,4,2)(3,7,8)_σ∞=(6,1)(4,8,7,3).png';
+            
+            // Create a custom canvas for the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size (2400x1600 for high resolution)
+            canvas.width = 2400;
+            canvas.height = 1600;
+            
+            // Fill with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add metadata at the top
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 48px Arial'; // Doubled font size for higher resolution
+            ctx.textAlign = 'left';
+            
+            let yPos = 80; // Doubled starting position
+            const lineHeight = 70; // Doubled line height
+            
+            // Add permutation triple
+            ctx.fillText(`σ₀ = (1,2,3,4,5,6), σ₁ = (1,5,4,2)(3,7,8), σ∞ = (6,1)(4,8,7,3)`, 40, yPos);
+            yPos += lineHeight;
+            
+            // Add base field if available
+            ctx.fillText(`Base field: 1 - 6T + 3T^2 + 4T^3 + 150T^4 + 12T^5 - 3438T^6 + 11208T^7 - 13296T^8 + 1396T^9 + 7368T^10 + 3780T^11 - 15306T^12 + 6060T^13 + 7866T^14 - 6296T^15 - 993T^16 + 1770T^17 - 355T^18`, 40, yPos); yPos += lineHeight;
+            
+            // Add embedding if available
+            ctx.fillText(`Embedding: 3.972529`, 40, yPos); yPos += lineHeight;
+            
+            // Capture the SVG element
+            html2canvas(document.querySelector('#graph'), {
+                backgroundColor: 'white',
+                scale: 4, // Increased scale for higher quality
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                imageTimeout: 0,
+                removeContainer: true
+            }).then(svgCanvas => {
+                // Calculate dimensions to fit the dessin in the remaining space
+                const dessinHeight = canvas.height - yPos - 40; // Leave some padding
+                const dessinWidth = canvas.width - 80; // Leave padding on sides
+                
+                // Calculate scaling to fit the dessin
+                const scaleX = dessinWidth / svgCanvas.width;
+                const scaleY = dessinHeight / svgCanvas.height;
+                const scale = Math.min(scaleX, scaleY);
+                
+                // Calculate centered position
+                const scaledWidth = svgCanvas.width * scale;
+                const scaledHeight = svgCanvas.height * scale;
+                const x = (canvas.width - scaledWidth) / 2;
+                const y = yPos + 20;
+                
+                // Draw the dessin
+                ctx.drawImage(svgCanvas, x, y, scaledWidth, scaledHeight);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        };
+    </script>
+</body>
+</html>
