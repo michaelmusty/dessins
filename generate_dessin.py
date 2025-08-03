@@ -476,7 +476,7 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>Dessin: {white_perm} vs {black_perm}</title>
+    <title>Dessin: σ₀ = {white_perm}, σ₁ = {black_perm}</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {{ margin: 0; padding: 0; font-family: Arial, sans-serif; }}
