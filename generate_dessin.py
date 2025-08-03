@@ -403,15 +403,83 @@ def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, p
     product = multiply_permutations(white_perm, black_perm)
     sigma_inf = inverse_permutation(product)
     
+    # Get galmap data for base field and embeddings
+    galmap_data = get_lmfdb_galmap(galmap_label)
+    base_field = galmap_data.get('base_field') if galmap_data else None
+    embeddings = galmap_data.get('embeddings') if galmap_data else None
+    
     # Generate HTML
-    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label)
+    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label, base_field, embeddings)
     
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
 
-def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label):
+def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label, base_field=None, embeddings=None):
     """Generate the interactive HTML content (simplified version)"""
+    
+    def format_minimal_polynomial(coeffs):
+        """Format minimal polynomial coefficients as a readable polynomial"""
+        if not coeffs:
+            return "Q"
+        
+        # Reverse coefficients so that coeffs[0] is the constant term
+        coeffs = list(reversed(coeffs))
+        
+        terms = []
+        for i, coeff in enumerate(coeffs):
+            if coeff == 0:
+                continue
+            if i == 0:
+                terms.append(str(coeff))
+            elif i == 1:
+                if coeff == 1:
+                    terms.append("x")
+                elif coeff == -1:
+                    terms.append("-x")
+                else:
+                    terms.append(f"{coeff}x")
+            else:
+                if coeff == 1:
+                    terms.append(f"x^{i}")
+                elif coeff == -1:
+                    terms.append(f"-x^{i}")
+                else:
+                    terms.append(f"{coeff}x^{i}")
+        
+        if not terms:
+            return "0"
+        
+        # Join terms with + signs, but handle negative coefficients
+        result = terms[0]
+        for term in terms[1:]:
+            if term.startswith('-'):
+                result += f" - {term[1:]}"
+            else:
+                result += f" + {term}"
+        
+        return result
+    
+    def format_embedding(embedding):
+        """Format embedding as a complex number"""
+        if len(embedding) == 2:
+            real, imag = embedding
+            if abs(imag) < 1e-10:
+                return f"{real:.6f}"
+            elif abs(real) < 1e-10:
+                if abs(imag - 1) < 1e-10:
+                    return "i"
+                elif abs(imag + 1) < 1e-10:
+                    return "-i"
+                else:
+                    return f"{imag:.6f}i"
+            else:
+                if imag > 0:
+                    return f"{real:.6f} + {imag:.6f}i"
+                else:
+                    return f"{real:.6f} - {abs(imag):.6f}i"
+        return str(embedding)
+    
     # Build vertices data
     vertices_data = []
     for v, (x, y) in pos.items():
@@ -562,6 +630,8 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
         <a href="../../passports/{passport_label}/index.html">← Back to Passport</a>
         <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a>
         <span style="margin-left: 20px; font-weight: bold;">σ₀ = {white_perm}, σ₁ = {black_perm}, σ∞ = {sigma_inf}</span>
+        {f'<span style="margin-left: 20px;">Base field: {format_minimal_polynomial(base_field)}</span>' if base_field else ''}
+        {f'<span style="margin-left: 20px;">Embeddings: {", ".join(format_embedding(emb) for emb in embeddings)}</span>' if embeddings else ''}
     </div>
     <div class="container">
         <div class="button-container">
