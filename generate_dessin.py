@@ -1025,9 +1025,8 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
                 link.download = filename;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                         }};
-             img.src = url;
-            }});
+            }};
+            img.src = url;
         }};
     </script>
 </body>
