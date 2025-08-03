@@ -943,15 +943,61 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             // Create filename with LMFDB label and permutation triple
             const filename = '{galmap_label}_σ₀={white_perm}_σ₁={black_perm}_σ∞={sigma_inf}.png';
             
-            // Capture the entire body (including nav bar with metadata)
-            html2canvas(document.body, {{
+            // Create a custom canvas for the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size (1200x800 for a nice aspect ratio)
+            canvas.width = 1200;
+            canvas.height = 800;
+            
+            // Fill with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add metadata at the top
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'left';
+            
+            let yPos = 40;
+            const lineHeight = 35;
+            
+            // Add permutation triple
+            ctx.fillText(`σ₀ = {white_perm}, σ₁ = {black_perm}, σ∞ = {sigma_inf}`, 20, yPos);
+            yPos += lineHeight;
+            
+            // Add base field if available
+            {f'ctx.fillText(`Base field: {format_minimal_polynomial(base_field)}`, 20, yPos); yPos += lineHeight;' if base_field else ''}
+            
+            // Add embedding if available
+            {f'ctx.fillText(`Embedding: {format_embedding(embeddings[embedding_index])}`, 20, yPos); yPos += lineHeight;' if embeddings and embedding_index is not None and embedding_index < len(embeddings) else ''}
+            
+            // Capture the SVG element
+            html2canvas(document.querySelector('#graph'), {{
                 backgroundColor: 'white',
-                scale: 2, // Higher resolution
+                scale: 2,
                 useCORS: true,
-                allowTaint: true,
-                width: window.innerWidth,
-                height: window.innerHeight
-            }}).then(canvas => {{
+                allowTaint: true
+            }}).then(svgCanvas => {{
+                // Calculate dimensions to fit the dessin in the remaining space
+                const dessinHeight = canvas.height - yPos - 20; // Leave some padding
+                const dessinWidth = canvas.width - 40; // Leave padding on sides
+                
+                // Calculate scaling to fit the dessin
+                const scaleX = dessinWidth / svgCanvas.width;
+                const scaleY = dessinHeight / svgCanvas.height;
+                const scale = Math.min(scaleX, scaleY);
+                
+                // Calculate centered position
+                const scaledWidth = svgCanvas.width * scale;
+                const scaledHeight = svgCanvas.height * scale;
+                const x = (canvas.width - scaledWidth) / 2;
+                const y = yPos + 10;
+                
+                // Draw the dessin
+                ctx.drawImage(svgCanvas, x, y, scaledWidth, scaledHeight);
+                
                 // Create download link
                 const link = document.createElement('a');
                 link.download = filename;

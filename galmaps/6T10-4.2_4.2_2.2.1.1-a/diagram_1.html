@@ -400,15 +400,61 @@
             // Create filename with LMFDB label and permutation triple
             const filename = '6T10-4.2_4.2_2.2.1.1-a_σ₀=(1,4,5,2)(3,6)_σ₁=(1,6,3,2)(4,5)_σ∞=(3,1)(4,2).png';
             
-            // Capture the entire body (including nav bar with metadata)
-            html2canvas(document.body, {
+            // Create a custom canvas for the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size (1200x800 for a nice aspect ratio)
+            canvas.width = 1200;
+            canvas.height = 800;
+            
+            // Fill with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add metadata at the top
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'left';
+            
+            let yPos = 40;
+            const lineHeight = 35;
+            
+            // Add permutation triple
+            ctx.fillText(`σ₀ = (1,4,5,2)(3,6), σ₁ = (1,6,3,2)(4,5), σ∞ = (3,1)(4,2)`, 20, yPos);
+            yPos += lineHeight;
+            
+            // Add base field if available
+            ctx.fillText(`Base field: 1 - 3T^2`, 20, yPos); yPos += lineHeight;
+            
+            // Add embedding if available
+            ctx.fillText(`Embedding: 1.732051`, 20, yPos); yPos += lineHeight;
+            
+            // Capture the SVG element
+            html2canvas(document.querySelector('#graph'), {
                 backgroundColor: 'white',
-                scale: 2, // Higher resolution
+                scale: 2,
                 useCORS: true,
-                allowTaint: true,
-                width: window.innerWidth,
-                height: window.innerHeight
-            }).then(canvas => {
+                allowTaint: true
+            }).then(svgCanvas => {
+                // Calculate dimensions to fit the dessin in the remaining space
+                const dessinHeight = canvas.height - yPos - 20; // Leave some padding
+                const dessinWidth = canvas.width - 40; // Leave padding on sides
+                
+                // Calculate scaling to fit the dessin
+                const scaleX = dessinWidth / svgCanvas.width;
+                const scaleY = dessinHeight / svgCanvas.height;
+                const scale = Math.min(scaleX, scaleY);
+                
+                // Calculate centered position
+                const scaledWidth = svgCanvas.width * scale;
+                const scaledHeight = svgCanvas.height * scale;
+                const x = (canvas.width - scaledWidth) / 2;
+                const y = yPos + 10;
+                
+                // Draw the dessin
+                ctx.drawImage(svgCanvas, x, y, scaledWidth, scaledHeight);
+                
                 // Create download link
                 const link = document.createElement('a');
                 link.download = filename;
