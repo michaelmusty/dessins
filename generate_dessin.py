@@ -973,60 +973,36 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
             // Add embedding if available
             {f'ctx.fillText(`Embedding: {format_embedding(embeddings[embedding_index])}`, 20, yPos); yPos += lineHeight;' if embeddings and embedding_index is not None and embedding_index < len(embeddings) else ''}
             
-            // Get the SVG element and its natural dimensions
-            const svgElement = document.querySelector('#graph svg');
-            const svgRect = svgElement.getBoundingClientRect();
-            const svgWidth = svgElement.viewBox.baseVal ? svgElement.viewBox.baseVal.width : svgRect.width;
-            const svgHeight = svgElement.viewBox.baseVal ? svgElement.viewBox.baseVal.height : svgRect.height;
-            
-            // Create a temporary canvas to render the SVG at its natural size
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = svgWidth * 2; // 2x scale for quality
-            tempCanvas.height = svgHeight * 2;
-            
-            // Fill with white background
-            tempCtx.fillStyle = 'white';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // Convert SVG to data URL and draw it
-            const svgData = new XMLSerializer().serializeToString(svgElement);
-            const svgBlob = new Blob([svgData], {{type: 'image/svg+xml'}});
-            const url = URL.createObjectURL(svgBlob);
-            
-            const img = new Image();
-            img.onload = function() {{
-                // Draw the SVG image at its natural size
-                tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
-                
+            // Capture the SVG element
+            html2canvas(document.querySelector('#graph'), {{
+                backgroundColor: 'white',
+                scale: 2,
+                useCORS: true,
+                allowTaint: true
+            }}).then(svgCanvas => {{
                 // Calculate dimensions to fit the dessin in the remaining space
                 const dessinHeight = canvas.height - yPos - 20; // Leave some padding
                 const dessinWidth = canvas.width - 40; // Leave padding on sides
                 
                 // Calculate scaling to fit the dessin
-                const scaleX = dessinWidth / tempCanvas.width;
-                const scaleY = dessinHeight / tempCanvas.height;
+                const scaleX = dessinWidth / svgCanvas.width;
+                const scaleY = dessinHeight / svgCanvas.height;
                 const scale = Math.min(scaleX, scaleY);
                 
                 // Calculate centered position
-                const scaledWidth = tempCanvas.width * scale;
-                const scaledHeight = tempCanvas.height * scale;
+                const scaledWidth = svgCanvas.width * scale;
+                const scaledHeight = svgCanvas.height * scale;
                 const x = (canvas.width - scaledWidth) / 2;
                 const y = yPos + 10;
                 
                 // Draw the dessin
-                ctx.drawImage(tempCanvas, x, y, scaledWidth, scaledHeight);
-                
-                // Clean up
-                URL.revokeObjectURL(url);
+                ctx.drawImage(svgCanvas, x, y, scaledWidth, scaledHeight);
                 
                 // Create download link
                 const link = document.createElement('a');
                 link.download = filename;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                         }};
-             img.src = url;
             }});
         }};
     </script>
