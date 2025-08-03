@@ -117,7 +117,7 @@ def generate_galmap_page(galmap_label):
             diagram_path = galmap_dir / diagram_filename
             
             try:
-                generate_single_diagram(sigma0, sigma1, diagram_path, galmap_label, passport_label)
+                generate_single_diagram(sigma0, sigma1, diagram_path, galmap_label, passport_label, i)
                 diagram_files.append({
                     "filename": diagram_filename,
                     "sigma0": sigma0,
@@ -137,7 +137,7 @@ def generate_galmap_page(galmap_label):
     return galmap_dir
 
 
-def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, passport_label):
+def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, passport_label, embedding_index=None):
     """Generate a single diagram from permutation strings"""
     # Parse permutations
     cw = parse_cycles(white_perm)
@@ -409,13 +409,13 @@ def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, p
     embeddings = galmap_data.get('embeddings') if galmap_data else None
     
     # Generate HTML
-    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label, base_field, embeddings)
+    html_content = generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label, base_field, embeddings, embedding_index)
     
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
 
-def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label, base_field=None, embeddings=None):
+def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_perm, sigma_inf, galmap_label, passport_label, base_field=None, embeddings=None, embedding_index=None):
     """Generate the interactive HTML content (simplified version)"""
     
     def format_minimal_polynomial(coeffs):
@@ -434,18 +434,18 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
                 terms.append(str(coeff))
             elif i == 1:
                 if coeff == 1:
-                    terms.append("x")
+                    terms.append("T")
                 elif coeff == -1:
-                    terms.append("-x")
+                    terms.append("-T")
                 else:
-                    terms.append(f"{coeff}x")
+                    terms.append(f"{coeff}T")
             else:
                 if coeff == 1:
-                    terms.append(f"x^{i}")
+                    terms.append(f"T^{i}")
                 elif coeff == -1:
-                    terms.append(f"-x^{i}")
+                    terms.append(f"-T^{i}")
                 else:
-                    terms.append(f"{coeff}x^{i}")
+                    terms.append(f"{coeff}T^{i}")
         
         if not terms:
             return "0"
@@ -468,16 +468,16 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
                 return f"{real:.6f}"
             elif abs(real) < 1e-10:
                 if abs(imag - 1) < 1e-10:
-                    return "i"
+                    return "\\sqrt{-1}"
                 elif abs(imag + 1) < 1e-10:
-                    return "-i"
+                    return "-\\sqrt{-1}"
                 else:
-                    return f"{imag:.6f}i"
+                    return f"{imag:.6f}\\sqrt{{-1}}"
             else:
                 if imag > 0:
-                    return f"{real:.6f} + {imag:.6f}i"
+                    return f"{real:.6f} + {imag:.6f}\\sqrt{{-1}}"
                 else:
-                    return f"{real:.6f} - {abs(imag):.6f}i"
+                    return f"{real:.6f} - {abs(imag):.6f}\\sqrt{{-1}}"
         return str(embedding)
     
     # Build vertices data
@@ -631,7 +631,7 @@ def generate_interactive_html(pos, straight, curves, stubs, white_perm, black_pe
         <a href="https://beta.lmfdb.org/Belyi/{galmap_label}" target="_blank">View on LMFDB</a>
         <span style="margin-left: 20px; font-weight: bold;">σ₀ = {white_perm}, σ₁ = {black_perm}, σ∞ = {sigma_inf}</span>
         {f'<span style="margin-left: 20px;">Base field: {format_minimal_polynomial(base_field)}</span>' if base_field else ''}
-        {f'<span style="margin-left: 20px;">Embeddings: {", ".join(format_embedding(emb) for emb in embeddings)}</span>' if embeddings else ''}
+        {f'<span style="margin-left: 20px;">Embedding: {format_embedding(embeddings[embedding_index])}</span>' if embeddings and embedding_index is not None and embedding_index < len(embeddings) else ''}
     </div>
     <div class="container">
         <div class="button-container">
