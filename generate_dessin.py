@@ -1167,8 +1167,8 @@ def generate_passport_page(passport_label):
 
 def generate_main_index():
     """Generate the main index page"""
-    # Get all genus zero passports up to degree 6 from LMFDB
-    passports = list(db.belyi_passports.search({"g": 0, "deg": {"$lte": 6}}))
+    # Get all passports up to degree 6 from LMFDB (no genus filter)
+    passports = list(db.belyi_passports.search({"deg": {"$lte": 6}}))
     
     html_content = """<!DOCTYPE html>
 <html>
@@ -1183,12 +1183,22 @@ def generate_main_index():
         .passport-item a { text-decoration: none; color: #007bff; }
         .passport-item a:hover { text-decoration: underline; }
         .header { background: #f5f5f5; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
+        .filter-controls { background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #dee2e6; }
+        .filter-controls label { margin-right: 20px; font-weight: bold; }
+        .filter-controls input[type="checkbox"] { margin-right: 5px; }
+        .passport-item.hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Dessins from the LMFDB</h1>
+        </div>
+        
+        <div class="filter-controls">
+            <span>Filter to: </span>
+            <label><input type="checkbox" id="genus0-filter" onchange="applyFilters()"> Genus 0</label>
+            <label><input type="checkbox" id="orbits-filter" onchange="applyFilters()"> Number of orbits > 1</label>
         </div>
         
 """
@@ -1211,13 +1221,15 @@ def generate_main_index():
         
         for passport in passports_by_degree[degree]:
             passport_label = passport['plabel']
+            genus = passport.get('g', 0)
+            num_orbits = passport.get('num_orbits', 0)
             html_content += f"""
-                <div class="passport-item">
+                <div class="passport-item" data-genus="{genus}" data-orbits="{num_orbits}">
                     <h3><a href="/dessins/passports/{passport_label}/index.html">{passport_label}</a></h3>
                     <p><strong>Degree:</strong> {passport.get('deg', 'N/A')}</p>
                     <p><strong>Group:</strong> {passport.get('group', 'N/A')}</p>
-                    <p><strong>Genus:</strong> {passport.get('g', 'N/A')}</p>
-                    <p><strong>Orbits:</strong> {passport.get('num_orbits', 'N/A')}</p>
+                    <p><strong>Genus:</strong> {genus}</p>
+                    <p><strong>Orbits:</strong> {num_orbits}</p>
                 </div>
 """
         
@@ -1229,6 +1241,36 @@ def generate_main_index():
     html_content += """
         </div>
     </div>
+    
+    <script>
+        function applyFilters() {
+            const genus0Filter = document.getElementById('genus0-filter').checked;
+            const orbitsFilter = document.getElementById('orbits-filter').checked;
+            
+            const passportItems = document.querySelectorAll('.passport-item');
+            
+            passportItems.forEach(item => {
+                const genus = parseInt(item.getAttribute('data-genus'));
+                const orbits = parseInt(item.getAttribute('data-orbits'));
+                
+                let show = true;
+                
+                if (genus0Filter && genus !== 0) {
+                    show = false;
+                }
+                
+                if (orbitsFilter && orbits <= 1) {
+                    show = false;
+                }
+                
+                if (show) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>"""
     
@@ -1270,8 +1312,8 @@ def main():
     
     elif args.all:
         # Generate all data
-        # Get all genus zero passports up to degree 6 from LMFDB
-        passports = list(db.belyi_passports.search({"g": 0, "deg": {"$lte": 6}}))
+        # Get all passports up to degree 6 from LMFDB (no genus filter)
+        passports = list(db.belyi_passports.search({"deg": {"$lte": 6}}))
         
         # Generate all passport pages
         for passport in passports:
