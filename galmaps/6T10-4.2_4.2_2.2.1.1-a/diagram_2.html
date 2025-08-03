@@ -404,9 +404,9 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Set canvas size (1200x800 for a nice aspect ratio)
-            canvas.width = 1200;
-            canvas.height = 800;
+            // Set canvas size (2400x1600 for high resolution)
+            canvas.width = 2400;
+            canvas.height = 1600;
             
             // Fill with white background
             ctx.fillStyle = 'white';
@@ -414,32 +414,35 @@
             
             // Add metadata at the top
             ctx.fillStyle = 'black';
-            ctx.font = 'bold 24px Arial';
+            ctx.font = 'bold 48px Arial'; // Doubled font size for higher resolution
             ctx.textAlign = 'left';
             
-            let yPos = 40;
-            const lineHeight = 35;
+            let yPos = 80; // Doubled starting position
+            const lineHeight = 70; // Doubled line height
             
             // Add permutation triple
-            ctx.fillText(`σ₀ = (1,4,5,2)(3,6), σ₁ = (1,2,5,6)(3,4), σ∞ = (5,3)(6,4)`, 20, yPos);
+            ctx.fillText(`σ₀ = (1,4,5,2)(3,6), σ₁ = (1,2,5,6)(3,4), σ∞ = (5,3)(6,4)`, 40, yPos);
             yPos += lineHeight;
             
             // Add base field if available
-            ctx.fillText(`Base field: 1 - 3T^2`, 20, yPos); yPos += lineHeight;
+            ctx.fillText(`Base field: 1 - 3T^2`, 40, yPos); yPos += lineHeight;
             
             // Add embedding if available
-            ctx.fillText(`Embedding: -1.732051`, 20, yPos); yPos += lineHeight;
+            ctx.fillText(`Embedding: -1.732051`, 40, yPos); yPos += lineHeight;
             
             // Capture the SVG element
             html2canvas(document.querySelector('#graph'), {
                 backgroundColor: 'white',
-                scale: 2,
+                scale: 4, // Increased scale for higher quality
                 useCORS: true,
-                allowTaint: true
+                allowTaint: true,
+                logging: false,
+                imageTimeout: 0,
+                removeContainer: true
             }).then(svgCanvas => {
                 // Calculate dimensions to fit the dessin in the remaining space
-                const dessinHeight = canvas.height - yPos - 20; // Leave some padding
-                const dessinWidth = canvas.width - 40; // Leave padding on sides
+                const dessinHeight = canvas.height - yPos - 40; // Leave some padding
+                const dessinWidth = canvas.width - 80; // Leave padding on sides
                 
                 // Calculate scaling to fit the dessin
                 const scaleX = dessinWidth / svgCanvas.width;
@@ -450,7 +453,7 @@
                 const scaledWidth = svgCanvas.width * scale;
                 const scaledHeight = svgCanvas.height * scale;
                 const x = (canvas.width - scaledWidth) / 2;
-                const y = yPos + 10;
+                const y = yPos + 20;
                 
                 // Draw the dessin
                 ctx.drawImage(svgCanvas, x, y, scaledWidth, scaledHeight);
