@@ -1,0 +1,5 @@
+\beamer@sectionintoc {1}{motivating example}{6}{0}{1}
+\beamer@sectionintoc {2}{some background}{29}{0}{2}
+\beamer@sectionintoc {3}{or-tools}{33}{0}{3}
+\beamer@sectionintoc {4}{closing}{58}{0}{4}
+\beamer@sectionintoc {5}{appendix}{64}{1}{5}

@@ -1,0 +1,529 @@
+% A pure minimalistic LaTeX-Beamer theme for everyone to use.
+% Copyright (C) 2020 Kai Norman Clasen
+
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+% This file is part of beamerthemepureminimalistic.
+
+% If problems/bugs are found or enhancements are desired, please contact
+% me over: https://github.com/kai-tub/latex-beamer-pure-minimalistic
+
+% \documentclass[aspectratio=169]{beamer}
+% should also look nice for the classic aspectratio
+% of course, than the text has to be refitted
+\documentclass{beamer}
+% Will be ignored if LuaTeX engine is used
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usepackage{hyperref}
+
+\usetheme[lightmode, showmaxslides, nofooterlogo]{pureminimalistic}
+
+\renewcommand{\logotitle}{\includegraphics[width=.25\linewidth]{logos/zap.png}}
+\renewcommand{\logoheader}{\includegraphics[width=.35\linewidth]{logos/zap.png}}
+
+\renewcommand{\pageword}{slide}
+
+% \usepackage[backend=biber, doi=false, maxbibnames=2, maxcitenames=2,%
+%             style=numeric, sorting=none, url=false, eprint=false]{biblatex}
+% \addbibresource{demo_bib.bib}
+% this makes it possible to add backup slides, without counting them
+\usepackage{appendixnumberbeamer}
+\renewcommand{\appendixname}{\texorpdfstring{\translate{appendix}}{appendix}}
+
+\definecolor{title}{RGB}{186, 6, 80}
+\definecolor{textcolor}{RGB}{78, 19, 115}
+\definecolor{footercolor}{RGB}{220, 220, 220}
+% \definecolor{bg}{RGB}{255,255,255}
+\renewcommand{\beamertitlecolor}{title}
+\renewcommand{\beamertextcolor}{textcolor}
+\renewcommand{\beamerfootertextcolor}{footercolor}
+% \renewcommand{\beamerbgcolor}{bg}
+
+\def \swidth {1.0}
+
+
+% if loaded after begin{document} a warning will appear: "pdfauthor already used"
+\title[visualizing dessins]{Visualizing genus zero dessins}
+\author{\href{https://michaelmusty.github.io/}{michael musty}}
+% \subtitle[subtitle]{Subtitle}
+\institute{\href{https://pydata.org/vermont2024}{pydata BTV}}
+\date{July 30, 2024}
+
+\begin{document}
+% has to be loaded outside of a frame to work!
+\maketitle
+
+\begin{frame}[plain]{intro}
+    \begin{figure}[H]
+        \centering
+        \begin{columns}[T]
+            \begin{column}{.2\linewidth}
+                \includegraphics[width=\linewidth]{tolv_tolv.png}
+                \caption{}
+                \includegraphics[width=\linewidth]{screenshots/otto_cry.png}
+                \caption{}
+            \end{column}
+            \begin{column}{.7\linewidth}
+                background
+                \begin{itemize}
+                    \item \href{https://www.lmfdb.org/}{number theory}, \href{http://magma.maths.usyd.edu.au/magma/}{computation}
+                \end{itemize}
+                past
+                \begin{itemize}
+                    \item postdoc (\href{https://icerm.brown.edu/}{ICERM})
+                    \item mathematician (\href{https://www.erdc.usace.army.mil/Locations/CRREL/}{CRREL})
+                    \begin{itemize}
+                        \item computer vision, mixed models
+                    \end{itemize}
+                \end{itemize}
+                current
+                \begin{itemize}
+                    \item data scientist (\href{https://faraday.ai/}{Faraday})
+                    \begin{itemize}
+                        \item product implementation
+                        \item modeling / API infrastructure
+                        \item (among other things)
+                    \end{itemize}
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[plain]{outline}
+    \tableofcontents
+\end{frame}
+\begin{frame}{repositories}
+    \href{https://github.com/faradayio/RepAssignment}{https://github.com/faradayio/RepAssignment}
+    \pause
+    \begin{vfilleditems}
+        \item\href{https://github.com/dbcrossbar/}{https://github.com/dbcrossbar/}
+        \item\href{https://github.com/faradayio/cage}{https://github.com/faradayio/cage}
+        \item\href{https://github.com/faradayio/joinery}{https://github.com/faradayio/joinery}
+    \end{vfilleditems}
+\end{frame}
+
+\section{motivating example}
+\begin{frame}{sales rep assignment}
+    \begin{vfilleditems}
+        \pause
+        \item A solar company Acme Inc. has inbound residential customers (leads $l_i$)
+        \pause
+        \item Each lead schedules a day to have an Acme sales rep $r_j$ visit the lead's residence
+        \pause
+        \item Acme has the ability to determine the expected profit $e_{ij}$ from having $r_j$ visit $l_i$
+        \pause
+        \item \textbf{objective}: Determine which rep to assign to each lead to maximize the sum of expected profits each day
+        \pause
+        \item subject to the \textbf{constraints}:
+        \begin{vfilleditems}
+            \item every lead get assigned exactly 1 rep
+            \item every rep visits at most 1 lead per day
+        \end{vfilleditems}
+    \end{vfilleditems}
+\end{frame}
+\begin{frame}{setup}
+    \begin{align*}
+        l_i &= \text{ lead $i$},\quad i\in\{0,\dots,L-1\}\\
+        r_j &= \text{ rep $j$},\quad j\in\{0,\dots,R-1\}\\
+        e_{ij} &= \text{ expected profit of assigning $l_i$ to $r_j$}\\
+        x_{ij} &= \begin{cases}
+            1 &\text{ if $l_i$ is assigned to $r_j$}\\
+            0 &\text{ otherwise}
+        \end{cases}
+    \end{align*}
+\end{frame}
+\begin{frame}{objective and constraints}
+    \pause
+    \begin{vfilleditems}
+        \item
+        \textbf{objective}: choose $x_{ij}$ to maximize
+        \begin{align*}
+            \sum_{i,j}e_{ij}x_{ij}
+        \end{align*}
+        \pause
+        \item subject to the
+        \textbf{constraints}:
+        \begin{vfilleditems}
+            \item $\sum_{j=0}^{R-1} x_{ij} = 1$, for every $l_i$
+            \pause
+            \newline
+            i.e. \emph{every lead gets assigned exactly 1 rep}
+            \pause
+            \item $\sum_{i=0}^{L-1} x_{ij} \leq 1$, for every $r_j$
+            \pause
+            \newline
+            i.e. \emph{every rep visits at most 1 lead per day}
+        \end{vfilleditems}
+    \end{vfilleditems}
+\end{frame}
+\begin{frame}{example $L=2$, $R=3$}
+    \begin{vfilleditems}
+        \pause
+        \item Given expected profits
+        \begin{align*}
+            (e_{ij}) &=\begin{pmatrix}
+                4&5&2\\
+                1&3&1
+            \end{pmatrix},
+            \quad\text{i.e. } e_{11}=3, e_{01}=5,\dots
+        \end{align*}
+        \pause
+        \item
+        \only<3>{
+            maximize
+            \begin{align*}
+                \sum_{i,j}e_{ij}x_{ij} &= e_{00}x_{00}+e_{01}x_{01}+e_{02}x_{02}\\
+                &+e_{10}x_{10}+e_{11}x_{11}+e_{12}x_{12}
+            \end{align*}
+        }
+        \only<4>{
+            maximize
+            \begin{align*}
+                \sum_{i,j}e_{ij}x_{ij} &= 4\cdot x_{00}+5\cdot x_{01}+2\cdot x_{02}\\
+                &+1\cdot x_{10}+3\cdot x_{11}+1\cdot x_{12}
+            \end{align*}
+        }
+   \end{vfilleditems}
+\end{frame}
+
+\begin{frame}{example $L=2, R=3$}
+\begin{vfilleditems}
+    \item
+    subject to the constraints
+    \pause
+    \item every lead gets assigned exactly 1 rep
+        \begin{align*}
+            x_{00}+x_{01}+x_{02}&=1, (l_0)\\
+            x_{10}+x_{11}+x_{12}&=1, (l_1)
+        \end{align*}
+    \pause
+    \item every rep visits at most 1 lead
+    \begin{align*}
+        x_{00}+x_{10}&\leq 1, (r_0)\\
+        x_{01}+x_{11}&\leq 1, (r_1)\\
+        x_{02}+x_{12}&\leq 1, (r_2)
+    \end{align*}
+\end{vfilleditems}
+\end{frame}
+\begin{frame}{example $L=2, R=3$}
+\begin{vfilleditems}
+    \item Given expected profits
+            \begin{align*}
+            (e_{ij}) &=\begin{pmatrix}
+                4&5&2\\
+                1&3&1
+            \end{pmatrix}
+        \end{align*}
+    \pause
+    \item $(x_{ij})=$ ?
+    \begin{align*}
+        &\underbrace{
+            \begin{pmatrix}
+                1&0&0\\
+                0&1&0
+            \end{pmatrix}
+        }_{7},
+        \underbrace{
+            \begin{pmatrix}
+                1&0&0\\
+                0&0&1
+            \end{pmatrix}
+        }_{5},
+        \underbrace{
+            \begin{pmatrix}
+                0&1&0\\
+                1&0&0
+            \end{pmatrix}
+        }_{6},\\
+        &\underbrace{
+            \begin{pmatrix}
+                0&1&0\\
+                0&0&1
+            \end{pmatrix}
+        }_{6},
+        \underbrace{
+            \begin{pmatrix}
+                0&0&1\\
+                1&0&0
+            \end{pmatrix}
+        }_{3},
+        \underbrace{
+            \begin{pmatrix}
+                0&0&1\\
+                0&1&0
+            \end{pmatrix}
+        }_{5}
+    \end{align*}
+    \pause
+    \item 
+    \textbf{upshot}: $r_1$ should not be greedy!
+\end{vfilleditems}
+\end{frame}
+
+\section{some background}
+\begin{frame}{combinatorial optimization}
+    \begin{vfilleditems}
+        \pause
+        \item difficult in general but can be done in practice
+        \pause
+        \item\textbf{integer linear programming}:
+        \begin{vfilleditems}
+            \item linear objective and constraints
+            \item integer decision variables
+        \end{vfilleditems}
+        \pause
+        \item\textbf{constraint programming}:
+        \begin{vfilleditems}
+            \item determine feasible solutions to a system of constraints
+            \item can be used to solve integer linear programs
+        \end{vfilleditems}
+    \end{vfilleditems}
+\end{frame}
+
+\section{or-tools}
+\begin{frame}{example $L=5$, $R=7$}
+    \begin{vfilleditems}
+        \pause
+        \item Given
+        \begin{align*}
+        (e_{ij}) =
+            \begin{pmatrix}
+                &7&4& 8& 5& 7& 3& 7\\
+               &8& 5& 4& 8& 8& 3& 6\\
+               &5& 2& 8& 6& 2& 5& 1\\
+               &6& 9& 1& 3& 7& 4& 9\\
+               &3& 5& 3& 7& 5& 9& 7
+            \end{pmatrix}
+        \end{align*}
+        \pause
+        \item 
+        find $(x_{ij})$ such that we maximum expected profit subject to the constraints:
+        \begin{vfilleditems}
+            \pause
+            \item every row of $(x_{ij})$ has exactly one 1
+            \pause
+            \item every column of $(x_{ij})$ has at most one 1
+        \end{vfilleditems}
+    \end{vfilleditems}
+\end{frame}
+\begin{frame}{CP-SAT example}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{screenshots/cp_01_imports.png}
+        \caption{imports}
+        \label{fig:cp_01_imports}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.3\linewidth]{screenshots/cp_02_globals.png}
+        \caption{globals}
+        \label{fig:cp_02_globals}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1.0\linewidth]{screenshots/cp_03_random_parameters.png}
+        \caption{$e_{ij}$}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.25\linewidth]{screenshots/cp_03_model.png}
+        \caption{}
+    \end{figure}
+\end{frame}
+\begin{frame}{CP-SAT example}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\linewidth]{screenshots/cp_04_decision_variables.png}
+        \caption{$x_{ij}$}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\linewidth]{screenshots/cp_05_objective.png}
+        \caption{$\sum_{i,j}e_{ij}x_{ij}$}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\linewidth]{screenshots/cp_06_constraint_on_leads.png}
+        \caption{$\sum_{j=0}^{R-1}x_{ij}=1$}
+    \end{figure}
+\end{frame}
+\begin{frame}{CP-SAT example}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\linewidth]{screenshots/cp_07_constraint_on_reps.png}
+        \caption{$\sum_{i=0}^{L-1}x_{ij}\leq 1$}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\linewidth]{screenshots/cp_08_solve.png}
+        \caption{solve}
+    \end{figure}
+\end{frame}
+\begin{frame}{CP-SAT example}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\linewidth]{screenshots/cp_09_result.png}
+        \caption{result}
+    \end{figure}
+    \pause
+    \begin{vfilleditems}
+    \item
+    \href{https://github.com/faradayio/RepAssignment/blob/main/scripts/cp_sat/simple_example.py}{main/scripts/cp\_sat/simple\_example.py}
+    \item
+    \href{https://developers.google.com/optimization/cp}{https://developers.google.com/optimization/cp}
+    \end{vfilleditems}
+\end{frame}
+
+\begin{frame}{MIP example}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\swidth\linewidth]{screenshots/mip_01_setup_diff.png}
+        \caption{setup}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\swidth\linewidth]{screenshots/mip_02_model_diff.png}
+        \caption{model}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\swidth\linewidth]{screenshots/mip_03_decision_vars_diff.png}
+        \caption{decision variables}
+    \end{figure}
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\swidth\linewidth]{screenshots/mip_04_solve_diff.png}
+        \caption{solve}
+    \end{figure}
+\end{frame}
+\begin{frame}{MIP example}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\swidth\linewidth]{screenshots/mip_05_results_diff.png}
+        \caption{results}
+    \end{figure}
+    \pause
+    \begin{vfilleditems}
+        \item \href{https://github.com/faradayio/RepAssignment/blob/main/scripts/mip/simple_example.py}{main/scripts/mip/simple\_example.py}
+        \item \href{https://developers.google.com/optimization/mip/mip}{https://developers.google.com/optimization/mip}
+    \end{vfilleditems}
+\end{frame}
+\begin{frame}{solutions}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{screenshots/cp_sat_solution.png}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=0.7\linewidth]{screenshots/mip_solution.png}
+\end{figure}
+\end{frame}
+
+\section{closing}
+\begin{frame}{closing}
+    \begin{vfilleditems}
+        \pause
+        \item optimization problems pair well with predictions
+        \pause
+        \item optimal solutions are feasible
+        \pause
+        \item or-tools:
+        \begin{vfilleditems}
+            \item\href{https://developers.google.com/optimization}{https://developers.google.com/optimization}
+            \item\href{https://github.com/d-krupke/cpsat-primer}{https://github.com/d-krupke/cpsat-primer}
+        \end{vfilleditems}
+        \pause
+        \item\href{https://github.com/faradayio/RepAssignment}{https://github.com/faradayio/RepAssignment}
+        \pause
+        \item Thanks for listening!
+    \end{vfilleditems}
+\end{frame}
+
+\appendix
+\section{appendix}
+\begin{frame}[plain]{}
+\end{frame}
+\begin{frame}{setup with time slots}
+    Now suppose that leads sign up for one of $T$ daily time slots and that rep availability can vary
+    \pause
+    \begin{align*}
+        l_i &= \text{ lead $i$},\quad i\in\{0,\dots,L-1\}\\
+        r_j &= \text{ rep $j$},\quad j\in\{0,\dots,R-1\}\\
+        t_k &= \text{ time slot $k$}, \quad k\in\{0,\dots,T-1\}\\
+        t_{s_i} &= \text{ time slot for $l_i$},\quad s_i\in\{0,\dots,T-1\}\\
+        e_{ij} &= \text{ expected profit of assigning $l_i$ to $r_j$}\\
+        x_{ij} &= \begin{cases}
+            1 &\text{ if $l_i$ is assigned to $r_j$}\\
+            0 &\text{ otherwise}
+        \end{cases}\\
+        a_{jk} &= \begin{cases}
+            1&\text{ if $r_j$ is available at $t_k$}\\
+            0&\text{ otherwise}
+        \end{cases}
+    \end{align*}
+\end{frame}
+\begin{frame}{objective}
+We aim to maximize
+\begin{align*}
+    \sum_{i,j}e_{ij}x_{ij}
+\end{align*}
+subject to the following constraints
+\end{frame}
+\begin{frame}{constraints}
+\begin{vfilleditems}
+    \item For every $l_i$
+    \begin{align*}
+         \sum_{j=0}^{R-1} x_{ij}a_{js_i}= 1
+    \end{align*}
+        \pause
+\item
+Note that $a_{js_i}$ is the availability of $r_j$ at the time slot corresponding to $l_i$ (since this time slot has index $s_i$)
+    \pause
+    \item i.e. \emph{every lead must be assigned exactly 1 available rep}
+\end{vfilleditems}
+\end{frame}
+\begin{frame}{constraints}
+\begin{vfilleditems}
+\item
+For every $r_j$ and every $t_k$
+\begin{align*}
+    \sum_{i=0}^{L-1}x_{ij}a_{jk}\leq 1
+\end{align*}
+\pause
+\item
+i.e. \emph{a rep cannot have more than 1 assignment in each time slot}
+\pause
+\item Note that for a given $j$ we do allow
+\begin{align*}
+\sum_{i=0}^{L-1} x_{ij}a_{j s_i} \geq 1
+\end{align*}
+\end{vfilleditems}
+\end{frame}
+% \begin{frame}{constraints}
+%     % distance travelled
+% \end{frame}
+
+\end{document}
