@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dessin: () vs ()</title>
+    <title>Dessin: σ₀ = (), σ₁ = ()</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         .nav {
@@ -84,14 +85,18 @@
 <body>
     <div class="nav">
         <a href="index.html">← Back to Galmap</a>
-        <a href="../../passports/1T1-[1,1,1]-1-1-1-g0/index.html">← Back to Passport</a>
+        <a href="../../passports/1T1-1_1_1/index.html">← Back to Passport</a>
         <a href="https://beta.lmfdb.org/Belyi/1T1-1_1_1-a" target="_blank">View on LMFDB</a>
+        <span style="margin-left: 20px; font-weight: bold;">σ₀ = (), σ₁ = (), σ∞ = (1)</span>
+        <span style="margin-left: 20px;">Base field: 1 - T</span>
+        <span style="margin-left: 20px;">Embedding: 1.000000</span>
     </div>
     <div class="container">
         <div class="button-container">
             <button class="toggle-button" onclick="toggleControlPoints()">Hide Control Points</button>
             <button class="toggle-button" onclick="toggleVertexLabels()">Hide Vertex Labels</button>
             <button class="toggle-button" onclick="toggleEdgeLabels()">Hide Edge Labels</button>
+            <button class="toggle-button" onclick="captureScreen()">Screen Capture</button>
         </div>
         <div id="graph"></div>
     </div>
@@ -124,10 +129,10 @@
         // Define the graph data
         const graphData = {
             vertices: [
-                { id: "w1", x: 0, y: 0, color: "white", textColor: "black" },
+                { id: "w1", x: 0, y: 0, color: "white", textColor: "black" },                { id: "b1", x: 1.4, y: 0.0, color: "black", textColor: "white" },
             ],
             straightEdges: [
-,
+                { start: [0, 0], end: [1.4, 0.0], label: "1", labelX: 0.7, labelY: 0.0 },
             ],
             curvedEdges: [
 ,
@@ -388,6 +393,77 @@
             });
             
             button.textContent = isVisible ? 'Show Edge Labels' : 'Hide Edge Labels';
+        };
+        
+        // Screen capture function
+        function captureScreen() {
+            // Create filename with LMFDB label and permutation triple
+            const filename = '1T1-1_1_1-a_σ₀=()_σ₁=()_σ∞=(1).png';
+            
+            // Create a custom canvas for the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size (2400x1600 for high resolution)
+            canvas.width = 2400;
+            canvas.height = 1600;
+            
+            // Fill with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add metadata at the top
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 48px Arial'; // Doubled font size for higher resolution
+            ctx.textAlign = 'left';
+            
+            let yPos = 80; // Doubled starting position
+            const lineHeight = 70; // Doubled line height
+            
+            // Add permutation triple
+            ctx.fillText(`σ₀ = (), σ₁ = (), σ∞ = (1)`, 40, yPos);
+            yPos += lineHeight;
+            
+            // Add base field if available
+            ctx.fillText(`Base field: 1 - T`, 40, yPos); yPos += lineHeight;
+            
+            // Add embedding if available
+            ctx.fillText(`Embedding: 1.000000`, 40, yPos); yPos += lineHeight;
+            
+            // Capture the SVG element
+            html2canvas(document.querySelector('#graph'), {
+                backgroundColor: 'white',
+                scale: 4, // Increased scale for higher quality
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                imageTimeout: 0,
+                removeContainer: true
+            }).then(svgCanvas => {
+                // Calculate dimensions to fit the dessin in the remaining space
+                const dessinHeight = canvas.height - yPos - 40; // Leave some padding
+                const dessinWidth = canvas.width - 80; // Leave padding on sides
+                
+                // Calculate scaling to fit the dessin
+                const scaleX = dessinWidth / svgCanvas.width;
+                const scaleY = dessinHeight / svgCanvas.height;
+                const scale = Math.min(scaleX, scaleY);
+                
+                // Calculate centered position
+                const scaledWidth = svgCanvas.width * scale;
+                const scaledHeight = svgCanvas.height * scale;
+                const x = (canvas.width - scaledWidth) / 2;
+                const y = yPos + 20;
+                
+                // Draw the dessin
+                ctx.drawImage(svgCanvas, x, y, scaledWidth, scaledHeight);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
         };
     </script>
 </body>

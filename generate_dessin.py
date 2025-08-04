@@ -34,6 +34,10 @@ from lmf import db
 # ------------ setup functions ------------
 def parse_cycles(s):
     s = s.replace(" ", "")
+    if s == "()":
+        # For empty permutation, we need to determine the degree from context
+        # This will be handled by ensure_singletons later
+        return []
     return [
         [int(x) for x in part.split(",") if x] for part in re.findall(r"\(([^)]+)\)", s)
     ]
@@ -117,15 +121,21 @@ def generate_galmap_page(galmap_label):
             diagram_path = galmap_dir / diagram_filename
             
             try:
-                generate_single_diagram(sigma0, sigma1, diagram_path, galmap_label, passport_label, i)
+                # Calculate the correct sigma_inf for display
+                if sigma0 == "()" and sigma1 == "()" and galmap_data["deg"] == 1:
+                    display_sigma_inf = "(1)"
+                else:
+                    display_sigma_inf = sigma_inf
+                
+                generate_single_diagram(sigma0, sigma1, diagram_path, galmap_label, passport_label, i, galmap_data["deg"])
                 diagram_files.append({
                     "filename": diagram_filename,
                     "sigma0": sigma0,
                     "sigma1": sigma1,
-                    "sigma_inf": sigma_inf,
+                    "sigma_inf": display_sigma_inf,
                     "index": i+1
                 })
-                logger.info(f"Generated diagram {i+1}: σ₀ = {sigma0}, σ₁ = {sigma1}, σ∞ = {sigma_inf}")
+                logger.info(f"Generated diagram {i+1}: σ₀ = {sigma0}, σ₁ = {sigma1}, σ∞ = {display_sigma_inf}")
             except Exception as e:
                 logger.error(f"Failed to generate diagram {i+1}: {e}")
                 import traceback
@@ -137,15 +147,21 @@ def generate_galmap_page(galmap_label):
     return galmap_dir
 
 
-def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, passport_label, embedding_index=None):
+def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, passport_label, embedding_index=None, degree=None):
     """Generate a single diagram from permutation strings"""
     # Parse permutations
     cw = parse_cycles(white_perm)
     cb = parse_cycles(black_perm)
     
-    labels = {label for c in cw + cb for label in c}
-    ensure_singletons(cw, labels)
-    ensure_singletons(cb, labels)
+    # Handle degree 1 case where both permutations are "()"
+    if white_perm == "()" and black_perm == "()" and degree == 1:
+        cw = [[1]]
+        cb = [[1]]
+        labels = {1}
+    else:
+        labels = {label for c in cw + cb for label in c}
+        ensure_singletons(cw, labels)
+        ensure_singletons(cb, labels)
     cw.sort(key=min)
     cb.sort(key=min)
     if cw:
@@ -341,9 +357,19 @@ def generate_single_diagram(white_perm, black_perm, output_path, galmap_label, p
     # σ₀ * σ₁ * σ∞ = identity, so σ∞ = (σ₀ * σ₁)^(-1)
     def multiply_permutations(perm1, perm2):
         """Multiply two permutations in cycle notation"""
+        # Handle degree 1 case where both permutations are "()"
+        if perm1 == "()" and perm2 == "()":
+            return "(1)"
+        
         # Convert to mapping representation
-        n = max(max(int(x) for x in str(perm1).replace('(', '').replace(')', '').split(',') if x.strip().isdigit()),
-                max(int(x) for x in str(perm2).replace('(', '').replace(')', '').split(',') if x.strip().isdigit()))
+        # Extract all numbers from both permutations
+        numbers1 = [int(x) for x in str(perm1).replace('(', '').replace(')', '').split(',') if x.strip().isdigit()]
+        numbers2 = [int(x) for x in str(perm2).replace('(', '').replace(')', '').split(',') if x.strip().isdigit()]
+        
+        if not numbers1 and not numbers2:
+            return "(1)"
+        
+        n = max(max(numbers1) if numbers1 else 0, max(numbers2) if numbers2 else 0)
         
         # Create mapping for perm1
         mapping1 = {}
