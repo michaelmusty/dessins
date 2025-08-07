@@ -523,8 +523,6 @@ INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT ./logos/zap.png
-INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/fira/FiraSans-Italic-osf-t1.vf
-INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/fira/FiraSans-Italic-osf-t1--base.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/fira/T1FiraMono-TOsF.fd
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/fira/T1FiraMono-TOsF.fd
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/fira/T1FiraMono-TOsF.fd
@@ -560,7 +558,6 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/fira/FiraSans-Italic
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/fira/FiraSans-Regular.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb
-INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmss12.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb
