@@ -1,3 +1,4 @@
-\beamer@sectionintoc {1}{Background}{4}{0}{1}
-\beamer@sectionintoc {2}{Visualizations and objectives}{10}{0}{2}
-\beamer@sectionintoc {3}{Examples}{11}{0}{3}
+\beamer@sectionintoc {1}{Drawings}{4}{0}{1}
+\beamer@sectionintoc {2}{Background}{6}{0}{2}
+\beamer@sectionintoc {3}{Visualizations old and new}{12}{0}{3}
+\beamer@sectionintoc {4}{Examples and motivating questions}{16}{0}{4}

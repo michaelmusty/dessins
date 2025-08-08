@@ -28,6 +28,7 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usepackage{hyperref}
+\usepackage{diagbox}
 
 \usetheme[lightmode, showmaxslides, nofooterlogo]{pureminimalistic}
 
@@ -46,6 +47,7 @@
 \definecolor{title}{RGB}{186, 6, 80}
 \definecolor{textcolor}{RGB}{78, 19, 115}
 \definecolor{footercolor}{RGB}{220, 220, 220}
+\definecolor{Maroon}{RGB}{128, 0, 0}
 % \definecolor{bg}{RGB}{255,255,255}
 \renewcommand{\beamertitlecolor}{title}
 \renewcommand{\beamertextcolor}{textcolor}
@@ -171,8 +173,52 @@
     \tableofcontents
 \end{frame}
 
+\section{Drawings}
+\begin{frame}[plain]{Drawing example}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{8T38_example.png}
+    \caption{
+  \href{https://michaelmusty.github.io/dessins/passports/8T38-4.2.2_3.3.1.1_3.3.2/index.html}{8T38-4.2.2\_3.3.1.1\_3.3.2}
+    }
+  \end{figure}
+\end{frame}
+\begin{frame}[plain]{Degree 3 example}
+    % the simple example in the different categories
+    \begin{center}
+        \begin{tikzpicture}[scale=.7]
+          \node at (0,-5) (dessins)
+          {
+            \begin{tikzpicture}[
+                scale=1,
+                node distance=1.75cm,
+                vblack/.style={circle,draw=black,fill=black,thick},
+                vwhite/.style={circle,draw=black,fill=white,thick}
+              ]
+              \node[vwhite] (A) {};
+              \node[right=of A, vblack] (B) {};
+              \node[right=of B, vwhite] (C) {};
+              \node[right=of C, vblack] (D) {};
+              \draw[thick] (A) to node [above] {$3$} node {} (B);
+              \draw[thick] (B) to node [above] {$2$} node {} (C);
+              \draw[thick] (C) to node [above] {$1$} node {} (D);
+            \end{tikzpicture}
+          };
+          \node at (0,0) (perms)
+          {
+            $
+            \Big((1\,2)(3), (1)(2\, 3), (1\,3\,2)\Big)
+            $
+          };
+          % \draw[<->] (dessins) to node [above] {$\sim$} node {} (perms);
+          \draw[<->] (dessins) to (perms);
+        \end{tikzpicture}
+      \end{center}
+    
+\end{frame}
+
 \section{Background}
-\begin{frame}[plain]{A branched covering}
+\begin{frame}[plain]{Degree 3 example}
     % simple example
     \begin{center}
         %\includegraphics[scale=.5]{monodromy.pdf}
@@ -423,12 +469,15 @@ Note
 \begin{vfilleditems}
 \item The \textbf{size} of a passport is the number of permutation triples belonging to it (up to simultaneous conjugacy).
 
-\item Each passport is stable under the Galois action and therefore is
+\item A \textbf{refined passport} replaces $\lambda$ with $C=(C_0,C_1,C_\infty)$
+a triple of conjugacy classes of $G$.
+
+\item Each (refined) passport is stable under the Galois action and therefore is
 a union of Galois orbits.
 \end{vfilleditems}
 
 \end{frame}
-\section{Visualizations and objectives}
+\section{Visualizations old and new}
 \begin{frame}[plain]{Objective of this work}
     % state the objective of the visualizations
     % topologically correct dessins without any gluing
@@ -440,7 +489,6 @@ a union of Galois orbits.
         \item \href{https://michaelmusty.github.io/dessins/}{https://michaelmusty.github.io/dessins/}
     \end{vfilleditems}
 \end{frame}
-\section{Examples}
 % https://michaelmusty.github.io/dessins/passports/7T7-7_4.1.1.1_5.2/index.html (interesting splitting)
 \begin{frame}[plain]{7T6-5.1.1\_4.2.1\_3.2.2}
     % triangle example
@@ -468,8 +516,49 @@ a union of Galois orbits.
         \item \href{https://www.figma.com/board/DqosFmGPM6TZ6JRC0GqKrv/9T34-6.1.1.1_5.2.2_6.1.1.1?node-id=0-1&t=oSOOBi353di5uS75-1}{All drawings together}
     \end{vfilleditems}
 \end{frame}
-\begin{frame}[plain]{}
-  Thanks for listening!
+\section{Examples and motivating questions}
+\begin{frame}[plain]{Motivating future questions}
+%   one thing that you might want to say, even if you don't write it, is that the goal is to learn something about the absolute Galois group through its action on dessins
+% you could also add a slide with some motivating future questions
+% like, can we tell when 2 dessins correspond to Galois conjugate Belyi maps
+% is there topological or combinatorial data that can tell us when a passport splits into multiple Galois orbits
+The ultimate goal is to learn something about the absolute Galois group through its action on dessins.
+To that end:
+\begin{vfilleditems}
+  \item Can we tell when 2 dessins correspond to Galois conjugate Belyi maps?
+  \item Is there topological or combinatorial data that can tell us when a passport splits into multiple Galois orbits?
+  \item Can we tell when a passport is a union of multiple refined passports?
+\end{vfilleditems}
+
+\end{frame}
+\begin{frame}[plain]{Completeness of the data}
+  % table of counts
+  \begin{equation*}
+    \begin{tabular}{c||c|c|c|c|c|| c}
+  \diagbox{$d$}{$g$} & $0$ & $1$ & $2$ & $3$ & $\geq 4$ & total\\
+      \hline\hline
+      $1$\rule{0pt}{2.5ex} & {\color{Maroon}1}$/1$ & $0$ & $0$ & $0$ & $0$ & {\color{Maroon}1}$/1$\\ % 1 nonhyperbolic
+      $2$ & {\color{Maroon}1}$/1$ & $0$ & $0$ & $0$ & $0$ & {\color{Maroon}1}$/1$\\ % 1 nonhyperbolic
+      $3$ & {\color{Maroon}2}$/2$ & {\color{Maroon}1}$/1$ & $0$ & $0$ & $0$ & {\color{Maroon}3}$/3$\\ % 3 nonhyperbolic
+      $4$ & {\color{Maroon}6}$/6$ & {\color{Maroon}2}$/2$ & $0$ & $0$ & $0$ & {\color{Maroon}8}$/8$\\ % 6 g0 nonhyperbolic, 1 g1 nonhyperbolic
+      $5$ & {\color{Maroon}12}$/12$ & {\color{Maroon}6}$/6$ & {\color{Maroon}2}$/2$ & $0$ & $0$ & {\color{Maroon}20}$/20$\\ % 4 g0 nonhyp
+      $6$ & {\color{Maroon}38}$/38$ & {\color{Maroon}29}$/29$ & {\color{Maroon}7}$/7$ & $0$ & $0$ & {\color{Maroon}74}$/74$\\ % 10 g0 nonhyp, 2 g1 nonhyp
+      $7$ & {\color{Maroon}89}$/89$ & {\color{Maroon}50}$/50$ & {\color{Maroon}7}$/13$ & {\color{Maroon}2}$/3$ & $0$ & {\color{Maroon}148}$/155$\\ %
+      $8$ & {\color{Maroon}243}$/261$ & {\color{Maroon}83}$/217$ & {\color{Maroon}0}$/84$ & {\color{Maroon}0}$/11$ & $0$ & {\color{Maroon}326}$/573$\\ % 10 g0 nonhyp, 2 g1 nonhyp
+      $9$ & {\color{Maroon}410}$/583$ & {\color{Maroon}33}$/427$ & {\color{Maroon}0}$/163$ & {\color{Maroon}0}$/28$ & {\color{Maroon}0}$/6$ & {\color{Maroon}443}$/1207$\\ % 7 g0 nonhyp, 2 g1 nonhyp
+      \hline
+      total & {\color{Maroon}802}$/993$ & {\color{Maroon}204}$/732$ & {\color{Maroon}16}$/269$ & {\color{Maroon}2}$/42$ & {\color{Maroon}0}$/6$ & {\color{Maroon}1024}$/2042$
+    \end{tabular}
+  \end{equation*}
+  
+\end{frame}
+\begin{frame}[plain]{Thanks!}
+  To:
+  \begin{vfilleditems}
+    \item Sam Schiavone \url{https://math.mit.edu/~sschiavo/}
+    \item Aaron Fenyes \url{https://ooo.fareycircles.ooo/}
+    \item And to you for listening!
+  \end{vfilleditems}
 \end{frame}
 % \section{Open questions}
 % \begin{frame}[plain]{Open questions}
