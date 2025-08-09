@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1754680879.27658 "/Users/musty/dessins/main.tex" "main.pdf" "main" 1754680880.99038 0
-  "/Users/musty/dessins/main.tex" 1754680879.90111 23329 a425c1bf9e270bd1b2c623723331e4f0 ""
+["pdflatex"] 1754756499.769 "/Users/musty/dessins/main.tex" "main.pdf" "main" 1754756501.49584 0
+  "/Users/musty/dessins/main.tex" 1754756497.68765 23431 29febecd324b4d57a84ff528a3048527 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/fira/fir_d4q673.enc" 1570828436 2978 6d777d1174162fa94ff58f36782f4570 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/fira/fir_iln36p.enc" 1570828436 3071 cfa92ee28d698dd9275559d9d1c3a233 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -251,11 +251,11 @@
   "beamerouterthemepureminimalistic.sty" 1754264350 5582 8552981521ffecac7181caa6741d79cc ""
   "beamerthemepureminimalistic.sty" 1754264350 2182 338a5c9c3b21aea971bccbe068fc5075 ""
   "logos/zap.png" 1754264350 8014 f208bac30c07c63120fd18392e5530b7 ""
-  "main.aux" 1754680880.86711 3948 0d6804ae25fd59daf7bf22a28ecf9ece "pdflatex"
-  "main.nav" 1754680880.86816 2536 d20234f44161f0473a6bdcdada0c5b0f "pdflatex"
-  "main.out" 1754680880.86797 575 2bce2496bb5e9ea7cce1581e9975b189 "pdflatex"
-  "main.tex" 1754680879.90111 23329 a425c1bf9e270bd1b2c623723331e4f0 ""
-  "main.toc" 1754680880.86819 223 115eb748ccad3093d121116cc67801d8 "pdflatex"
+  "main.aux" 1754756501.36671 4029 b7b709bcb8f5609836c93cc9b959402b "pdflatex"
+  "main.nav" 1754756501.36772 2590 9450ce8d76c7922f9e512a0e3a132182 "pdflatex"
+  "main.out" 1754756501.36749 719 1cda62d615ec90300eb8aaaacfe44b33 "pdflatex"
+  "main.tex" 1754756497.68765 23431 29febecd324b4d57a84ff528a3048527 ""
+  "main.toc" 1754756501.36776 250 3815b09852e4cc02d674b1c6881ca38f "pdflatex"
   "screenshots/otto_cry.png" 1754264350 876981 a4a3c68cdef683f1989fd7ea8cca8741 ""
   "tolv_tolv.png" 1754264350 537885 fe444222ba77c35348a1819b7b9d42f6 ""
   (generated)
