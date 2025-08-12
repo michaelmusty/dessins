@@ -489,13 +489,6 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/fira/FiraSans-Regular-
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/fira/FiraMono-Regular-tosf-t1.vf
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/fira/FiraMono-Regular-tosf-t1--base.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/fira/fir_d4q673.enc
-INPUT ./main.toc
-INPUT ./main.toc
-INPUT main.toc
-INPUT ./logos/zap.png
-INPUT ./logos/zap.png
-INPUT ./logos/zap.png
-INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT ./logos/zap.png
@@ -545,10 +538,6 @@ INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/fira/FiraSans-Regular-osf-t1.vf
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/fira/FiraSans-Regular-osf-t1--base.tfm
-INPUT ./logos/zap.png
-INPUT ./logos/zap.png
-INPUT ./logos/zap.png
-INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT ./logos/zap.png
 INPUT ./logos/zap.png
